@@ -25,6 +25,35 @@ export function dashboardHomeForRole(role: string): string {
   }
 }
 
+export const FREE_PLAN = {
+  name: "Free",
+  price: 0,
+  currency: "৳ BDT",
+  maxActiveServices: 3,
+  features: [
+    "Maximum 3 active services",
+    "Basic vendor dashboard",
+    "Booking request management",
+    "Public vendor profile",
+  ],
+} as const;
+
+export const PREMIUM_PLAN = {
+  name: "Premium",
+  price: 4999,
+  currency: "৳ BDT",
+  maxActiveServices: Infinity,
+  features: [
+    "Unlimited active services",
+    "Premium vendor badge",
+    "Priority placement in search",
+    "Featured on the homepage",
+    "All Free plan features",
+  ],
+} as const;
+
+export const PREMIUM_PRICE_BDT = 4999;
+
 export const ROLE_LABELS: Record<string, string> = {
   customer: "Customer",
   vendor: "Vendor",
