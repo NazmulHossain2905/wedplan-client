@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.75rem;
+  --background: #faf8f5;
+  --foreground: #29272b;
+  --card: #ffffff;
+  --card-foreground: #29272b;
+  --popover: #ffffff;
+  --popover-foreground: #29272b;
+  --primary: #683e4b;
+  --primary-foreground: #faf6f3;
+  --secondary: #f5ecea;
+  --secondary-foreground: #53303b;
+  --muted: #f1ece7;
+  --muted-foreground: #79757b;
+  --accent: #f9eef0;
+  --accent-foreground: #683e4b;
+  --destructive: #b3261e;
+  --border: #eae2dc;
+  --input: #e2d9d2;
+  --ring: #c98291;
+  --chart-1: #683e4b;
+  --chart-2: #c98291;
+  --chart-3: #8e9b84;
+  --chart-4: #e8bfc5;
+  --chart-5: #79757b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #29272b;
+  --sidebar-primary: #683e4b;
+  --sidebar-primary-foreground: #faf6f3;
+  --sidebar-accent: #f9eef0;
+  --sidebar-accent-foreground: #683e4b;
+  --sidebar-border: #eae2dc;
+  --sidebar-ring: #c98291;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans:
+    var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-display), Georgia, "Times New Roman", serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* WedPlan brand palette */
+  --color-ivory: #faf8f5;
+  --color-burgundy: #683e4b;
+  --color-burgundy-deep: #53303b;
+  --color-rose: #c98291;
+  --color-rose-soft: #e8bfc5;
+  --color-rose-tint: #f9eef0;
+  --color-sage: #8e9b84;
+  --color-sage-tint: #eef2ea;
+  --color-charcoal: #29272b;
+  --color-warm-gray: #79757b;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.dark {
+  --background: #201d20;
+  --foreground: #f3eefa;
+  --card: #2a262a;
+  --card-foreground: #f3eefa;
+  --popover: #2a262a;
+  --popover-foreground: #f3eefa;
+  --primary: #d9a5b1;
+  --primary-foreground: #31202a;
+  --secondary: #37303a;
+  --secondary-foreground: #f3eefa;
+  --muted: #37303a;
+  --muted-foreground: #b8b2bc;
+  --accent: #3a2e35;
+  --accent-foreground: #f3eefa;
+  --destructive: #e57368;
+  --border: #3d363c;
+  --input: #3d363c;
+  --ring: #c98291;
+  --chart-1: #d9a5b1;
+  --chart-2: #c98291;
+  --chart-3: #a5b39a;
+  --chart-4: #e8bfc5;
+  --chart-5: #b8b2bc;
+  --sidebar: #262226;
+  --sidebar-foreground: #f3eefa;
+  --sidebar-primary: #d9a5b1;
+  --sidebar-primary-foreground: #31202a;
+  --sidebar-accent: #3a2e35;
+  --sidebar-accent-foreground: #f3eefa;
+  --sidebar-border: #3d363c;
+  --sidebar-ring: #c98291;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "liga" 1,
+      "kern" 1;
+  }
+  ::selection {
+    background-color: #e8bfc5;
+    color: #53303b;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Refined scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9cfc9;
+  border-radius: 999px;
+  border: 2px solid #faf8f5;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c98291;
+}
+
+/* Subtle dotted texture for hero / CTA panels */
+.wed-texture {
+  background-image: radial-gradient(#e8bfc5 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Hide number input spinners for cleaner forms */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
