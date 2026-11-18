@@ -17,3 +17,8 @@ export function fileToDataUrl(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+/** Format a number as Bangladeshi Taka with lakh grouping (৳1,20,000). */
+export function formatBDT(amount: number): string {
+  return `৳${new Intl.NumberFormat("en-IN").format(amount)}`;
+}
