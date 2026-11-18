@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -88,6 +90,10 @@
   --color-sage-tint: #eef2ea;
   --color-charcoal: #29272b;
   --color-warm-gray: #79757b;
+  --font-heading: var(--font-sans);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 .dark {
@@ -130,6 +136,7 @@
   }
   html {
     scroll-behavior: smooth;
+    @apply font-sans;
   }
   body {
     @apply bg-background text-foreground;
