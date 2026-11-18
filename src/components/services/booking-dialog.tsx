@@ -1,12 +1,6 @@
- 
 "use client";
 
-import * as React from "react";
-import { CalendarDays, Loader2, MapPin } from "lucide-react";
-import { toast } from "sonner";
-import type { Service, User } from "@/types";
-import { formatBDT, todayStr } from "@/lib/demo-helpers";
-import { validateBooking } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +8,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQueryClient } from "@tanstack/react-query";
-import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
+import { api, ApiError } from "@/lib/api";
+import { formatBDT, todayStr } from "@/lib/helpers";
+import { validateBooking } from "@/lib/validations";
+import type { Service, User } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, Loader2, MapPin } from "lucide-react";
+import { SyntheticEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface BookingDialogProps {
   open: boolean;
@@ -29,16 +28,23 @@ interface BookingDialogProps {
   vendor?: User;
 }
 
-export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDialogProps) {
+export function BookingDialog({
+  open,
+  onOpenChange,
+  service,
+  vendor,
+}: BookingDialogProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [eventDate, setEventDate] = React.useState("");
-  const [eventLocation, setEventLocation] = React.useState("");
-  const [message, setMessage] = React.useState("");
-  const [submitting, setSubmitting] = React.useState(false);
-  const [errors, setErrors] = React.useState<{ date?: string; location?: string }>({});
+  const [eventDate, setEventDate] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ date?: string; location?: string }>(
+    {},
+  );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setEventDate("");
       setEventLocation("");
@@ -48,7 +54,7 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
     }
   }, [open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     if (!user) return;
     const validationError = validateBooking({ eventDate, eventLocation });
@@ -59,14 +65,21 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
           : eventDate < todayStr()
             ? "Event date cannot be in the past."
             : undefined,
-        location: !eventLocation.trim() ? "Event location is required." : undefined,
+        location: !eventLocation.trim()
+          ? "Event location is required."
+          : undefined,
       });
       toast.error(validationError);
       return;
     }
     setSubmitting(true);
     try {
-      await api.createBooking({ serviceId: service.id, eventDate, eventLocation, message });
+      await api.createBooking({
+        serviceId: service.id,
+        eventDate,
+        eventLocation,
+        message,
+      });
       toast.success("Booking request sent!", {
         description: `${vendor?.businessName ?? "The vendor"} will review your request and respond soon.`,
       });
@@ -75,7 +88,9 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
       onOpenChange(false);
     } catch (error) {
       toast.error(
-        error instanceof ApiError ? error.message : "Could not submit your booking request.",
+        error instanceof ApiError
+          ? error.message
+          : "Could not submit your booking request.",
       );
     } finally {
       setSubmitting(false);
@@ -86,9 +101,12 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl">Request Booking</DialogTitle>
+          <DialogTitle className="font-serif text-xl">
+            Request Booking
+          </DialogTitle>
           <DialogDescription>
-            Send a booking request to the vendor — they will review and respond in your dashboard.
+            Send a booking request to the vendor — they will review and respond
+            in your dashboard.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,11 +117,15 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
             className="size-16 shrink-0 rounded-md object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-foreground">{service.serviceName}</p>
+            <p className="truncate font-medium text-foreground">
+              {service.serviceName}
+            </p>
             <p className="truncate text-sm text-muted-foreground">
               {vendor?.businessName ?? vendor?.name} · {service.location}
             </p>
-            <p className="mt-0.5 font-semibold text-burgundy">{formatBDT(service.price)}</p>
+            <p className="mt-0.5 font-semibold text-burgundy">
+              {formatBDT(service.price)}
+            </p>
           </div>
         </div>
 
@@ -131,7 +153,9 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
                 required
               />
             </div>
-            {errors.date ? <p className="text-xs text-destructive">{errors.date}</p> : null}
+            {errors.date ? (
+              <p className="text-xs text-destructive">{errors.date}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -157,7 +181,9 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
                 required
               />
             </div>
-            {errors.location ? <p className="text-xs text-destructive">{errors.location}</p> : null}
+            {errors.location ? (
+              <p className="text-xs text-destructive">{errors.location}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -170,7 +196,9 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
               rows={4}
               maxLength={600}
             />
-            <p className="text-right text-xs text-muted-foreground">{message.length}/600</p>
+            <p className="text-right text-xs text-muted-foreground">
+              {message.length}/600
+            </p>
           </div>
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -185,7 +213,8 @@ export function BookingDialog({ open, onOpenChange, service, vendor }: BookingDi
             <Button type="submit" disabled={submitting}>
               {submitting ? (
                 <>
-                  <Loader2 aria-hidden className="size-4 animate-spin" /> Sending request…
+                  <Loader2 aria-hidden className="size-4 animate-spin" />{" "}
+                  Sending request…
                 </>
               ) : (
                 "Submit Booking Request"

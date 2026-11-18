@@ -1,20 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import {
-  ChevronDown,
-  FilterX,
-  LayoutGrid,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
-import { usePublicServices } from "@/hooks/queries";
-import { CATEGORIES } from "@/data/categories";
-import type { SortOption } from "@/types";
-import { cn } from "@/lib/utils";
-import { debounce } from "@/lib/demo-helpers";
+  ServiceCard,
+  ServiceCardSkeleton,
+} from "@/components/services/service-card";
+import { EmptyState } from "@/components/shared/empty-state";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,17 +23,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ServiceCard, ServiceCardSkeleton } from "@/components/services/service-card";
-import { EmptyState } from "@/components/shared/empty-state";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { CATEGORIES } from "@/data/categories";
+import { usePublicServices } from "@/hooks/queries";
+import { debounce } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
+import type { SortOption } from "@/types";
+import {
+  ChevronDown,
+  FilterX,
+  LayoutGrid,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 9;
 const LOAD_STEP = 6;
@@ -76,12 +85,20 @@ export function ServicesBrowser() {
   const initialCategory = searchParams.get("category") ?? "all";
   const initialVendor = searchParams.get("vendor") ?? "all";
 
-  const [searchInput, setSearchInput] = React.useState(searchParams.get("q") ?? "");
-  const [debouncedSearch, setDebouncedSearch] = React.useState(searchParams.get("q") ?? "");
+  const [searchInput, setSearchInput] = React.useState(
+    searchParams.get("q") ?? "",
+  );
+  const [debouncedSearch, setDebouncedSearch] = React.useState(
+    searchParams.get("q") ?? "",
+  );
   const [category, setCategory] = React.useState(initialCategory);
-  const [location, setLocation] = React.useState(searchParams.get("location") ?? "all");
+  const [location, setLocation] = React.useState(
+    searchParams.get("location") ?? "all",
+  );
   const [priceRange, setPriceRange] = React.useState("all");
-  const [sort, setSort] = React.useState<SortOption>((searchParams.get("sort") as SortOption) ?? "recommended");
+  const [sort, setSort] = React.useState<SortOption>(
+    (searchParams.get("sort") as SortOption) ?? "recommended",
+  );
   const [vendorFilter, setVendorFilter] = React.useState(initialVendor);
   const [visible, setVisible] = React.useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
@@ -161,7 +178,8 @@ export function ServicesBrowser() {
   const loading = isLoading;
   const visibleServices = filtered.slice(0, visible);
 
-  const activeFilters: { key: string; label: string; onClear: () => void }[] = [];
+  const activeFilters: { key: string; label: string; onClear: () => void }[] =
+    [];
   if (debouncedSearch.trim())
     activeFilters.push({
       key: "search",
@@ -172,13 +190,22 @@ export function ServicesBrowser() {
       },
     });
   if (category !== "all")
-    activeFilters.push({ key: "category", label: category, onClear: () => setCategory("all") });
+    activeFilters.push({
+      key: "category",
+      label: category,
+      onClear: () => setCategory("all"),
+    });
   if (location !== "all")
-    activeFilters.push({ key: "location", label: location, onClear: () => setLocation("all") });
+    activeFilters.push({
+      key: "location",
+      label: location,
+      onClear: () => setLocation("all"),
+    });
   if (priceRange !== "all")
     activeFilters.push({
       key: "price",
-      label: PRICE_RANGES.find((p) => p.value === priceRange)?.label ?? priceRange,
+      label:
+        PRICE_RANGES.find((p) => p.value === priceRange)?.label ?? priceRange,
       onClear: () => setPriceRange("all"),
     });
   if (vendorFilter !== "all") {
@@ -273,12 +300,14 @@ export function ServicesBrowser() {
             Browse Wedding Services
           </h1>
           <span className="rounded-full bg-rose-tint px-3 py-1 text-sm font-medium text-burgundy">
-            {loading ? "…" : `${filtered.length} ${filtered.length === 1 ? "service" : "services"}`}
+            {loading
+              ? "…"
+              : `${filtered.length} ${filtered.length === 1 ? "service" : "services"}`}
           </span>
         </div>
         <p className="max-w-2xl text-muted-foreground">
-          Explore verified photographers, venues, decorators, caterers, and artists — every listing
-          is reviewed by our team before it goes live.
+          Explore verified photographers, venues, decorators, caterers, and
+          artists — every listing is reviewed by our team before it goes live.
         </p>
       </header>
 
@@ -304,7 +333,10 @@ export function ServicesBrowser() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex-1 sm:w-52">
-            <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+            <Select
+              value={sort}
+              onValueChange={(v) => setSort(v as SortOption)}
+            >
               <SelectTrigger className="h-11 w-full" aria-label="Sort services">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
@@ -331,12 +363,18 @@ export function ServicesBrowser() {
             </SheetTrigger>
             <SheetContent side="bottom" className="flex max-h-[80vh] flex-col">
               <SheetHeader className="pb-0">
-                <SheetTitle className="text-left font-serif">Filters</SheetTitle>
+                <SheetTitle className="text-left font-serif">
+                  Filters
+                </SheetTitle>
               </SheetHeader>
               <div className="overflow-y-auto px-4 pb-6 pt-3">
                 {filterControls}
-                <Button onClick={() => setMobileFiltersOpen(false)} className="mt-5 w-full">
-                  Show {filtered.length} {filtered.length === 1 ? "result" : "results"}
+                <Button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="mt-5 w-full"
+                >
+                  Show {filtered.length}{" "}
+                  {filtered.length === 1 ? "result" : "results"}
                 </Button>
               </div>
             </SheetContent>
@@ -395,9 +433,18 @@ export function ServicesBrowser() {
         />
       ) : (
         <>
-          <div className={cn("grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3", isFetching && "opacity-70 transition-opacity")}>
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3",
+              isFetching && "opacity-70 transition-opacity",
+            )}
+          >
             {visibleServices.map((service) => (
-              <ServiceCard key={service.id} service={service} vendor={service.vendor} />
+              <ServiceCard
+                key={service.id}
+                service={service}
+                vendor={service.vendor}
+              />
             ))}
           </div>
           {visible < filtered.length ? (
@@ -417,7 +464,8 @@ export function ServicesBrowser() {
             </div>
           ) : (
             <p className="mt-10 text-center text-sm text-muted-foreground">
-              Showing all {filtered.length} {filtered.length === 1 ? "service" : "services"}
+              Showing all {filtered.length}{" "}
+              {filtered.length === 1 ? "service" : "services"}
             </p>
           )}
         </>

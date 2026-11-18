@@ -1,7 +1,29 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
+import { BookingDialog } from "@/components/services/booking-dialog";
+import {
+  ServiceCard,
+  ServiceCardSkeleton,
+} from "@/components/services/service-card";
+import { ServiceGallery } from "@/components/services/service-gallery";
+import { PremiumBadge } from "@/components/shared/badges";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Reveal } from "@/components/shared/reveal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/auth-context";
+import { usePublicServices, useService } from "@/hooks/queries";
+import { formatBDT, initials } from "@/lib/helpers";
 import {
   BadgeCheck,
   CalendarDays,
@@ -11,30 +33,16 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { useService, usePublicServices } from "@/hooks/queries";
-import { formatBDT } from "@/lib/demo-helpers";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { ServiceGallery } from "@/components/services/service-gallery";
-import { BookingDialog } from "@/components/services/booking-dialog";
-import { ServiceCard, ServiceCardSkeleton } from "@/components/services/service-card";
-import { PremiumBadge } from "@/components/shared/badges";
-import { EmptyState } from "@/components/shared/empty-state";
-import { initials } from "@/lib/demo-helpers";
-import { Reveal } from "@/components/shared/reveal";
+import Link from "next/link";
+import * as React from "react";
 
-function BookingNotice({ tone, children }: { tone: "info" | "warn"; children: React.ReactNode }) {
+function BookingNotice({
+  tone,
+  children,
+}: {
+  tone: "info" | "warn";
+  children: React.ReactNode;
+}) {
   return (
     <div
       className={
@@ -67,7 +75,9 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
   const { data: relatedData, isLoading: relatedLoading } = usePublicServices(
     service ? { category: service.category, limit: 4 } : { limit: 4 },
   );
-  const related = (relatedData?.services ?? []).filter((s) => s.id !== serviceId).slice(0, 3);
+  const related = (relatedData?.services ?? [])
+    .filter((s) => s.id !== serviceId)
+    .slice(0, 3);
 
   if (isLoading || !hydrated) {
     return (
@@ -112,7 +122,9 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-48 truncate sm:max-w-72">{service.serviceName}</BreadcrumbPage>
+            <BreadcrumbPage className="max-w-48 truncate sm:max-w-72">
+              {service.serviceName}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -127,14 +139,18 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
                 ? "approved"
                 : "inactive"}
           </strong>{" "}
-          and hidden from customers. Only you and administrators can see this page.
+          and hidden from customers. Only you and administrators can see this
+          page.
         </div>
       ) : null}
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
         {/* Main column */}
         <div className="min-w-0">
-          <ServiceGallery images={service.images} serviceName={service.serviceName} />
+          <ServiceGallery
+            images={service.images}
+            serviceName={service.serviceName}
+          />
 
           <div className="mt-8 space-y-5">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -143,8 +159,13 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
               </span>
               {service.rating > 0 ? (
                 <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                  <Star aria-hidden className="size-4 fill-amber-500 text-amber-500" />
-                  <strong className="text-foreground">{service.rating.toFixed(1)}</strong>
+                  <Star
+                    aria-hidden
+                    className="size-4 fill-amber-500 text-amber-500"
+                  />
+                  <strong className="text-foreground">
+                    {service.rating.toFixed(1)}
+                  </strong>
                   <span>({service.reviews} reviews)</span>
                 </span>
               ) : null}
@@ -164,22 +185,31 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-lg border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Price</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Price
+                </p>
                 <p className="mt-1 font-serif text-xl font-semibold text-burgundy">
                   {formatBDT(service.price)}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Location</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Location
+                </p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
-                  <MapPin aria-hidden className="size-4 text-rose" /> {service.location}
+                  <MapPin aria-hidden className="size-4 text-rose" />{" "}
+                  {service.location}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Availability</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Availability
+                </p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
                   <CalendarDays aria-hidden className="size-4 text-sage" />
-                  {publiclyVisible ? "Available for booking" : "Not accepting bookings"}
+                  {publiclyVisible
+                    ? "Available for booking"
+                    : "Not accepting bookings"}
                 </p>
               </div>
             </div>
@@ -187,11 +217,17 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
 
           {/* Vendor */}
           <Separator className="my-8" />
-          <section aria-label="Vendor information" className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section
+            aria-label="Vendor information"
+            className="rounded-xl border border-border bg-card p-6 shadow-xs"
+          >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <Avatar className="size-16 border-2 border-rose-soft/60">
-                  <AvatarImage src={vendor?.image} alt={vendor?.name ?? "Vendor"} />
+                  <AvatarImage
+                    src={vendor?.image}
+                    alt={vendor?.name ?? "Vendor"}
+                  />
                   <AvatarFallback className="bg-rose-tint text-burgundy">
                     {initials(vendor?.name ?? "W")}
                   </AvatarFallback>
@@ -201,13 +237,20 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
                     <h2 className="font-serif text-xl font-semibold text-foreground">
                       {vendor?.businessName ?? vendor?.name}
                     </h2>
-                    {vendor?.subscriptionPlan === "premium" ? <PremiumBadge /> : null}
+                    {vendor?.subscriptionPlan === "premium" ? (
+                      <PremiumBadge />
+                    ) : null}
                   </div>
-                  <p className="text-sm text-muted-foreground">by {vendor?.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    by {vendor?.name}
+                  </p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                     {vendor?.rating ? (
                       <span className="inline-flex items-center gap-1">
-                        <Star aria-hidden className="size-3.5 fill-amber-500 text-amber-500" />
+                        <Star
+                          aria-hidden
+                          className="size-3.5 fill-amber-500 text-amber-500"
+                        />
                         {vendor.rating.toFixed(1)}
                       </span>
                     ) : null}
@@ -232,12 +275,15 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
                 className="w-full border-burgundy/30 text-burgundy hover:bg-rose-tint hover:text-burgundy sm:w-auto"
               >
                 <Link href={`/services?vendor=${service.vendorId}`}>
-                  <BadgeCheck aria-hidden className="size-4" /> View Vendor Services
+                  <BadgeCheck aria-hidden className="size-4" /> View Vendor
+                  Services
                 </Link>
               </Button>
             </div>
             {vendor?.bio ? (
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{vendor.bio}</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                {vendor.bio}
+              </p>
             ) : null}
           </section>
 
@@ -283,7 +329,8 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
                     className="w-full gap-2"
                     onClick={() => setBookingOpen(true)}
                   >
-                    <Heart aria-hidden className="size-4 fill-current" /> Request Booking
+                    <Heart aria-hidden className="size-4 fill-current" />{" "}
+                    Request Booking
                   </Button>
                 ) : (
                   <BookingNotice tone="warn">
@@ -300,8 +347,8 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
 
               {user?.role === "vendor" && !isOwner ? (
                 <BookingNotice tone="warn">
-                  Booking requests can only be submitted by customer accounts. Switch to a customer
-                  account to book this service.
+                  Booking requests can only be submitted by customer accounts.
+                  Switch to a customer account to book this service.
                 </BookingNotice>
               ) : null}
 
@@ -313,15 +360,24 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
 
               <ul className="space-y-2.5 pt-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2.5">
-                  <BadgeCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-sage" />
+                  <BadgeCheck
+                    aria-hidden
+                    className="mt-0.5 size-4 shrink-0 text-sage"
+                  />
                   Free booking request — no payment required now
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <BadgeCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-sage" />
+                  <BadgeCheck
+                    aria-hidden
+                    className="mt-0.5 size-4 shrink-0 text-sage"
+                  />
                   Vendor responds directly in your dashboard
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <BadgeCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-sage" />
+                  <BadgeCheck
+                    aria-hidden
+                    className="mt-0.5 size-4 shrink-0 text-sage"
+                  />
                   Cancel pending requests anytime
                 </li>
               </ul>

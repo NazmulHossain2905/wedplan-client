@@ -47,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       suppressHydrationWarning
       className={cn("font-sans", geist.variable)}
+      data-scroll-behavior="smooth"
     >
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased`}
