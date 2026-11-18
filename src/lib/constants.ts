@@ -6,6 +6,12 @@ export const APP_DESCRIPTION =
 /** Password shared by the seeded demo accounts (documented in the README). */
 export const DEMO_PASSWORD = "Demo@123";
 
+export const CONTACT_INFO = {
+  email: "hello@wedplan.com",
+  phone: "+880 1700-000000",
+  address: "House 12, Road 5, Gulshan 1, Dhaka 1212, Bangladesh",
+} as const;
+
 export function dashboardHomeForRole(role: string): string {
   switch (role) {
     case "admin":
