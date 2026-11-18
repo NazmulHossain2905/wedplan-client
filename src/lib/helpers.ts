@@ -22,3 +22,15 @@ export function fileToDataUrl(file: File): Promise<string> {
 export function formatBDT(amount: number): string {
   return `৳${new Intl.NumberFormat("en-IN").format(amount)}`;
 }
+
+/** Simple debounce helper. */
+export function debounce<T extends (...args: never[]) => void>(
+  fn: T,
+  ms: number,
+) {
+  let t: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}

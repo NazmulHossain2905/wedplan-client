@@ -1,13 +1,14 @@
+ 
 "use client";
 
-import { PremiumBadge } from "@/components/shared/badges";
+import Link from "next/link";
+import { ArrowRight, MapPin, Star } from "lucide-react";
+import type { User } from "@/types";
+import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { initials } from "@/lib/helpers";
-import { cn } from "@/lib/utils";
-import type { User } from "@/types";
-import { ArrowRight, MapPin, Star } from "lucide-react";
-import Link from "next/link";
+import { PremiumBadge } from "@/components/shared/badges";
+import { initials } from "@/lib/demo-helpers";
 
 const covers = [
   "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=70",
@@ -24,11 +25,7 @@ interface VendorCardProps {
   className?: string;
 }
 
-export function VendorCard({
-  vendor,
-  serviceCount,
-  className,
-}: VendorCardProps) {
+export function VendorCard({ vendor, serviceCount, className }: VendorCardProps) {
   const cover = covers[Math.abs(vendor.id.length * 7) % covers.length];
   return (
     <article
@@ -72,10 +69,7 @@ export function VendorCard({
           </span>
           {vendor.rating ? (
             <span className="inline-flex items-center gap-1">
-              <Star
-                aria-hidden
-                className="size-3.5 fill-amber-500 text-amber-500"
-              />
+              <Star aria-hidden className="size-3.5 fill-amber-500 text-amber-500" />
               {vendor.rating.toFixed(1)}
             </span>
           ) : null}

@@ -1,15 +1,18 @@
+ 
 "use client";
 
+import * as React from "react";
+import { MapPin, Star } from "lucide-react";
+import type { Service, User } from "@/types";
+import { cn } from "@/lib/utils";
+import { formatBDT } from "@/lib/demo-helpers";
+import { useViewService } from "@/lib/use-view-service";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PremiumBadge } from "@/components/shared/badges";
 import { SafeImage } from "@/components/shared/safe-image";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatBDT, initials } from "@/lib/helpers";
-import { useViewService } from "@/lib/use-view-service";
-import { cn } from "@/lib/utils";
-import type { Service, User } from "@/types";
-import { MapPin, Star } from "lucide-react";
+import { initials } from "@/lib/demo-helpers";
 
 interface ServiceCardProps {
   service: Service;
@@ -43,10 +46,7 @@ export function ServiceCard({ service, vendor, className }: ServiceCardProps) {
         </span>
         {service.rating > 0 ? (
           <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
-            <Star
-              aria-hidden
-              className="size-3.5 fill-amber-500 text-amber-500"
-            />
+            <Star aria-hidden className="size-3.5 fill-amber-500 text-amber-500" />
             {service.rating.toFixed(1)}
           </span>
         ) : null}
@@ -78,9 +78,7 @@ export function ServiceCard({ service, vendor, className }: ServiceCardProps) {
               <span className="truncate text-sm font-medium text-foreground">
                 {vendor.businessName ?? vendor.name}
               </span>
-              {vendor.subscriptionPlan === "premium" ? (
-                <PremiumBadge compact />
-              ) : null}
+              {vendor.subscriptionPlan === "premium" ? <PremiumBadge compact /> : null}
             </div>
           </div>
         ) : null}
