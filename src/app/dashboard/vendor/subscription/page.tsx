@@ -4,11 +4,11 @@ import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { useVendorStats, useVendorTransactions } from "@/hooks/queries";
 import { api, ApiError } from "@/lib/api";
 import { FREE_PLAN, PREMIUM_PLAN, PREMIUM_PRICE_BDT } from "@/lib/constants";
 import { formatBDT, formatDate } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
+import type { Transaction } from "@/types";
 import {
   Check,
   CreditCard,
@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function VendorSubscriptionPage() {
@@ -30,21 +30,54 @@ export default function VendorSubscriptionPage() {
   );
 }
 
+type VendorStats = {
+  totalServices: number;
+  activeServices: number;
+  pendingBookings: number;
+  acceptedBookings: number;
+  currentPlan: "free" | "premium";
+  planExpiresAt: string | null;
+};
+
 function VendorSubscription() {
   const { user } = useAuth();
-  const { data: stats } = useVendorStats(user);
-  const { data: transactionsData } = useVendorTransactions(null);
   const router = useRouter();
 
+  const [stats, setStats] = useState<VendorStats | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [starting, setStarting] = useState(false);
 
+  useEffect(() => {
+    if (user?.role !== "vendor") return;
+
+    let cancelled = false;
+
+    async function loadSubscription() {
+      try {
+        const [statsRes, transactionsRes] = await Promise.all([
+          api.vendorStats(),
+          api.vendorTransactions(),
+        ]);
+        if (cancelled) return;
+        setStats(statsRes);
+        setTransactions(transactionsRes.transactions);
+      } catch {
+        // Leave whatever is already on screen.
+      }
+    }
+
+    void loadSubscription();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   const isPremium = stats?.currentPlan === "premium";
-  const myTransactions = (transactionsData?.transactions ?? [])
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+  const myTransactions = transactions.slice().sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   /** Creates a server-side Checkout Session and redirects to it. */
   const startCheckout = async () => {

@@ -4,12 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft, SearchX } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { useVendorServices } from "@/hooks/queries";
+import { api } from "@/lib/api";
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { ServiceForm } from "@/components/forms/service-form";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Service } from "@/types";
 
 export default function EditServicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -22,9 +23,34 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
 
 function EditService({ id }: { id: string }) {
   const { user } = useAuth();
-  const { data, isLoading } = useVendorServices(user);
 
-  const service = (data?.services ?? []).find((s) => s.id === id);
+  const [myServices, setMyServices] = React.useState<Service[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (user?.role !== "vendor") return;
+
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const res = await api.vendorServices();
+        if (!cancelled) setMyServices(res.services);
+      } catch {
+        // Leave the not-found state to handle it.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const service = myServices.find((s) => s.id === id);
   // Vendors may only edit their own services — anything else is treated as not found.
   const owns = Boolean(service && user && service.vendorId === user.id);
 

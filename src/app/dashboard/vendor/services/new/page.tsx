@@ -4,11 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { useVendorServices, useVendorStats } from "@/hooks/queries";
+import { api } from "@/lib/api";
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { ServiceForm } from "@/components/forms/service-form";
 import { Button } from "@/components/ui/button";
 import { FREE_PLAN, PREMIUM_PLAN } from "@/lib/constants";
+import type { Service } from "@/types";
 
 export default function AddServicePage() {
   return (
@@ -18,14 +19,50 @@ export default function AddServicePage() {
   );
 }
 
+type VendorStats = {
+  totalServices: number;
+  activeServices: number;
+  pendingBookings: number;
+  acceptedBookings: number;
+  currentPlan: "free" | "premium";
+  planExpiresAt: string | null;
+};
+
 function AddService() {
   const { user } = useAuth();
-  const { data: stats } = useVendorStats(user);
-  const { data: servicesData } = useVendorServices(user);
+
+  const [stats, setStats] = React.useState<VendorStats | null>(null);
+  const [myServices, setMyServices] = React.useState<Service[]>([]);
+
+  React.useEffect(() => {
+    if (user?.role !== "vendor") return;
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      try {
+        const [statsRes, servicesRes] = await Promise.all([
+          api.vendorStats(),
+          api.vendorServices(),
+        ]);
+        if (cancelled) return;
+        setStats(statsRes);
+        setMyServices(servicesRes.services);
+      } catch {
+        // Leave the page usable even if the summary fails to load.
+      }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const activeCount =
     stats?.activeServices ??
-    (servicesData?.services ?? []).filter((s) => s.status === "approved" && s.isAvailable).length;
+    myServices.filter((s) => s.status === "approved" && s.isAvailable).length;
   const limitReached =
     (stats?.currentPlan ?? user?.subscriptionPlan) === "free" &&
     activeCount >= FREE_PLAN.maxActiveServices;

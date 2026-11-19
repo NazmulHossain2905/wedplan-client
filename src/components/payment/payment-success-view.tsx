@@ -4,7 +4,7 @@ import { PremiumBadge } from "@/components/shared/badges";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
-import { usePaymentVerify } from "@/hooks/queries";
+import { api } from "@/lib/api";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { formatBDT } from "@/lib/helpers";
 import {
@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 /**
@@ -26,12 +27,58 @@ import { toast } from "sonner";
  * /api/payment/verify (and the webhook has already done the activation);
  * the success redirect itself is never trusted to grant Premium.
  */
+interface PaymentResult {
+  status: string;
+  amount: number;
+  currency: string;
+  plan: string;
+  activated: boolean;
+}
+
 export function PaymentSuccessView() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const { user } = useAuth();
-  const { data, isLoading } = usePaymentVerify(user, sessionId ?? "");
 
+  const [data, setData] = useState<PaymentResult | null>(null);
+  const [done, setDone] = useState(false);
+
+  const shouldVerify = Boolean(user) && Boolean(sessionId);
+
+  // Keep asking the server until the webhook has finished processing.
+  useEffect(() => {
+    if (!shouldVerify || !sessionId) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function verify() {
+      try {
+        const result = await api.verifyPayment(sessionId!);
+        if (cancelled) return;
+
+        setData(result);
+        setDone(true);
+
+        if (result.status === "processing") {
+          timer = setTimeout(() => void verify(), 1500);
+        }
+      } catch {
+        if (cancelled) return;
+        setData(null);
+        setDone(true);
+      }
+    }
+
+    void verify();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [shouldVerify, sessionId]);
+
+  const isLoading = shouldVerify && !done;
   const activated = data?.activated ?? false;
   const notifiedRef = React.useRef(false);
 

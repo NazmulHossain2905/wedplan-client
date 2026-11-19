@@ -8,10 +8,10 @@ import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  useBookings,
-  useCustomerStats,
-  usePublicServices,
-} from "@/hooks/queries";
+  api,
+  type BookingWithDetails,
+  type ServiceWithVendor,
+} from "@/lib/api";
 import {
   ArrowRight,
   CalendarCheck2,
@@ -22,7 +22,7 @@ import {
   Heart,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function CustomerOverviewPage() {
   return (
@@ -32,19 +32,55 @@ export default function CustomerOverviewPage() {
   );
 }
 
+type CustomerStats = {
+  totalBookings: number;
+  pending: number;
+  accepted: number;
+  rejected: number;
+};
+
 function CustomerOverview() {
   const { user } = useAuth();
-  const { data: bookingsData, isLoading } = useBookings(user);
-  const { data: statsData } = useCustomerStats(user);
-  const { data: servicesData } = usePublicServices({ limit: 30 });
+
+  const [allBookings, setAllBookings] = useState<BookingWithDetails[]>([]);
+  const [statsData, setStatsData] = useState<CustomerStats | null>(null);
+  const [serviceList, setServiceList] = useState<ServiceWithVendor[]>([]);
+
+  useEffect(() => {
+    if (user?.role !== "customer") return;
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      try {
+        const [bookingsRes, statsRes, servicesRes] = await Promise.all([
+          api.bookings(),
+          api.customerStats(),
+          api.services({ limit: 30 }),
+        ]);
+        if (cancelled) return;
+        setAllBookings(bookingsRes.bookings);
+        setStatsData(statsRes);
+        setServiceList(servicesRes.services);
+      } catch {
+        // Leave whatever is already on screen.
+      }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const myBookings = useMemo(
     () =>
-      [...(bookingsData?.bookings ?? [])].sort(
+      [...allBookings].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
-    [bookingsData],
+    [allBookings],
   );
 
   const counts = useMemo(
@@ -67,7 +103,7 @@ function CustomerOverview() {
   const recommended = useMemo(() => {
     const bookedVendorIds = new Set(myBookings.map((b) => b.vendorId));
     const bookedServiceIds = new Set(myBookings.map((b) => b.serviceId));
-    const pool = (servicesData?.services ?? []).filter(
+    const pool = serviceList.filter(
       (s) =>
         s.vendorId !== user?.id &&
         !bookedServiceIds.has(s.id) &&
@@ -75,7 +111,7 @@ function CustomerOverview() {
     );
     const featured = pool.filter((s) => s.featured);
     return [...featured, ...pool.filter((s) => !s.featured)].slice(0, 3);
-  }, [servicesData, myBookings, user]);
+  }, [serviceList, myBookings, user]);
 
   const recent = myBookings.slice(0, 3);
   const maxCount = Math.max(counts.total, 1);

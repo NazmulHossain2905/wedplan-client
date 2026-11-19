@@ -26,11 +26,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-context";
 import { CATEGORIES } from "@/data/categories";
-import { useAdminServices } from "@/hooks/queries";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type ServiceWithVendor } from "@/lib/api";
 import { formatBDT, formatDate } from "@/lib/helpers";
 import type { Service } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   FolderOpen,
@@ -38,7 +36,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function AdminServicesPage() {
@@ -51,22 +49,54 @@ export default function AdminServicesPage() {
 
 function AdminServices() {
   const { user: admin } = useAuth();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
-  const [viewing, setViewing] = useState<Service | null>(null);
-  const [rejecting, setRejecting] = useState<Service | null>(null);
-  const [deleting, setDeleting] = useState<Service | null>(null);
+  const [viewing, setViewing] = useState<ServiceWithVendor | null>(null);
+  const [rejecting, setRejecting] = useState<ServiceWithVendor | null>(null);
+  const [deleting, setDeleting] = useState<ServiceWithVendor | null>(null);
 
-  const { data, isLoading, isFetching } = useAdminServices(admin, {
-    q: search.trim() || undefined,
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    category: categoryFilter !== "all" ? categoryFilter : undefined,
-  });
+  const [result, setResult] = useState<{
+    key: string;
+    services: ServiceWithVendor[];
+  } | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const services = data?.services ?? [];
+  const searchParam = search.trim() || undefined;
+  const statusParam = statusFilter !== "all" ? statusFilter : undefined;
+  const categoryParam =
+    categoryFilter !== "all" ? categoryFilter : undefined;
+  const requestKey = `${searchParam ?? ""}|${statusParam ?? ""}|${categoryParam ?? ""}|${reloadKey}`;
+
+  useEffect(() => {
+    if (admin?.role !== "admin") return;
+
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const res = await api.adminServices({
+          q: searchParam,
+          status: statusParam,
+          category: categoryParam,
+        });
+        if (!cancelled) setResult({ key: requestKey, services: res.services });
+      } catch {
+        if (!cancelled) setResult({ key: requestKey, services: [] });
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [admin, requestKey, searchParam, statusParam, categoryParam]);
+
+  const services = result?.services ?? [];
+  const isLoading = result === null;
+  const isFetching = result !== null && result.key !== requestKey;
 
   const filtered = useMemo(
     () =>
@@ -85,9 +115,7 @@ function AdminServices() {
   );
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin-services"] });
-    void queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-    void queryClient.invalidateQueries({ queryKey: ["services"] });
+    setReloadKey((key) => key + 1);
   };
 
   const handleApprove = async (service: Service) => {

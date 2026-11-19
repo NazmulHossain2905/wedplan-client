@@ -5,10 +5,10 @@ import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
-import { useBookings } from "@/hooks/queries";
+import { api, type BookingWithDetails } from "@/lib/api";
 import type { BookingStatus } from "@/types";
 import { CalendarCheck2, Compass } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const STATUS_TABS: { value: BookingStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -28,12 +28,37 @@ export default function CustomerBookingsPage() {
 
 function CustomerBookings() {
   const { user } = useAuth();
-  const { data, isLoading } = useBookings(user);
+
+  const [data, setData] = useState<BookingWithDetails[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<string>("all");
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadBookings() {
+      try {
+        const res = await api.bookings();
+        if (!cancelled) setData(res.bookings);
+      } catch {
+        // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadBookings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const myBookings = useMemo(
     () =>
-      [...(data?.bookings ?? [])].sort(
+      [...data].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),

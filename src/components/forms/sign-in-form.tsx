@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { signIn } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
 import { dashboardHomeForRole, DEMO_PASSWORD } from "@/lib/constants";
 import {
   Eye,
@@ -19,15 +19,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SyntheticEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { GoogleIcon } from "../shared/social-icons";
 
 export function SignInForm() {
+  const { signIn, googleSignIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
-  const googleParam = searchParams.get("google");
   const googleError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
@@ -57,41 +57,32 @@ export function SignInForm() {
     router.replace(target);
   };
 
-  const handleSubmit = async (e: SyntheticEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
       toast.error("Please enter your email and password.");
       return;
     }
     setSubmitting(true);
-    const { data, error } = await signIn.email({
-      email,
-      password,
-      rememberMe: remember,
-    });
+    const result = await signIn(email, password, remember);
     setSubmitting(false);
-    if (error || !data.user) {
-      toast.error(error?.message ?? "Sign in failed.");
+    if (!result.ok || !result.user) {
+      toast.error(result.error ?? "Sign in failed.");
       return;
     }
-    finishSignIn(data.user.name, data.user.role as string);
+    finishSignIn(result.user.name, result.user.role);
   };
 
-  // const handleGoogle = async () => {
-  //   if (googleParam === "demo") {
-  //     toast.info("Google OAuth is not configured in this environment.", {
-  //       description: "Signing you in with the demo Google account instead.",
-  //     });
-  //   }
-  //   setGoogleLoading(true);
-  //   const result = await googleDemoSignIn();
-  //   setGoogleLoading(false);
-  //   if (!result.ok || !result.user) {
-  //     toast.error(result.error ?? "Google sign-in failed.");
-  //     return;
-  //   }
-  //   finishSignIn(result.user.name, result.user.role);
-  // };
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const result = await googleSignIn();
+    setGoogleLoading(false);
+    if (!result.ok || !result.user) {
+      toast.error(result.error ?? "Google sign-in failed.");
+      return;
+    }
+    finishSignIn(result.user.name, result.user.role);
+  };
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-20">
@@ -208,7 +199,7 @@ export function SignInForm() {
           size="lg"
           className="w-full"
           disabled={googleLoading}
-          // onClick={() => void handleGoogle()}
+          onClick={() => void handleGoogle()}
         >
           {googleLoading ? (
             <Loader2 aria-hidden className="size-4 animate-spin" />

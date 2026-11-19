@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { formatBDT } from "@/lib/helpers";
-import { useQuery } from "@tanstack/react-query";
 import { CreditCard, Loader2, Lock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+interface CheckoutInfo {
+  sessionId: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  vendorName: string;
+  status: string;
+}
 
 /**
  * Sandbox payment provider checkout page (used when real Stripe keys are not
@@ -25,12 +33,32 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["checkout-info", sessionId],
-    queryFn: () => api.checkoutInfo(sessionId),
-    enabled: Boolean(sessionId),
-    retry: false,
-  });
+  const [data, setData] = useState<CheckoutInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(Boolean(sessionId));
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    let cancelled = false;
+
+    async function loadCheckout() {
+      try {
+        const info = await api.checkoutInfo(sessionId);
+        if (!cancelled) setData(info);
+      } catch (err) {
+        if (!cancelled) setError(err);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadCheckout();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
 
   const handlePay = async () => {
     if (paying) return;

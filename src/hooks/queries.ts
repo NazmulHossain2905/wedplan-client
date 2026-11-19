@@ -2,7 +2,7 @@
 
 import { api } from "@/lib/api";
 import type { User } from "@/types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@/lib/query-client";
 
 /**
  * React Query hooks — server state for every page. Protected endpoints are

@@ -9,11 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
-import { useBookings } from "@/hooks/queries";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type BookingWithDetails } from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
-import type { Booking } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   CalendarRange,
@@ -43,19 +40,44 @@ export default function VendorBookingsPage() {
 
 function VendorBookings() {
   const { user } = useAuth();
-  const { data, isLoading } = useBookings(user);
-  const queryClient = useQueryClient();
+
+  const [data, setData] = React.useState<BookingWithDetails[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [reloadKey, setReloadKey] = React.useState(0);
   const [tab, setTab] = React.useState<string>("pending");
-  const [viewing, setViewing] = React.useState<Booking | null>(null);
+  const [viewing, setViewing] = React.useState<BookingWithDetails | null>(null);
   const [responding, setResponding] = React.useState<{
-    booking: Booking;
+    booking: BookingWithDetails;
     action: "accepted" | "rejected";
   } | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadBookings() {
+      try {
+        const res = await api.bookings();
+        if (!cancelled) setData(res.bookings);
+      } catch {
+        // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadBookings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, reloadKey]);
+
   const myBookings = React.useMemo(
     () =>
-      [...(data?.bookings ?? [])].sort(
+      [...data].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
@@ -92,8 +114,7 @@ function VendorBookings() {
               : "The customer will be notified in their dashboard.",
         },
       );
-      void queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      void queryClient.invalidateQueries({ queryKey: ["vendor-stats"] });
+      setReloadKey((key) => key + 1);
     } catch (error) {
       toast.error(
         error instanceof ApiError

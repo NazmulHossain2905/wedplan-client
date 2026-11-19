@@ -14,15 +14,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  useAdminServices,
-  useAdminStats,
-  useAdminTransactions,
-  useAdminUsers,
-  useBookings,
-} from "@/hooks/queries";
-import { api, ApiError } from "@/lib/api";
+  api,
+  ApiError,
+  type BookingWithDetails,
+  type ServiceWithVendor,
+  type TransactionWithVendor,
+} from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
-import { useQueryClient } from "@tanstack/react-query";
+import type { User } from "@/types";
 import {
   ArrowRight,
   BadgeDollarSign,
@@ -35,7 +34,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -59,19 +58,71 @@ export default function AdminOverviewPage() {
   );
 }
 
+type AdminStats = {
+  totalUsers: number;
+  totalVendors: number;
+  totalCustomers: number;
+  totalServices: number;
+  pendingServices: number;
+  totalTransactions: number;
+  totalRevenue: number;
+};
+
+type AdminUser = User & {
+  serviceCount: number;
+  bookingCount: number;
+  requestCount: number;
+};
+
 function AdminOverview() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { data: statsData, isLoading } = useAdminStats(user);
-  const { data: usersData } = useAdminUsers(user);
-  const { data: servicesData } = useAdminServices(user);
-  const { data: bookingsData } = useBookings(user);
-  const { data: transactionsData } = useAdminTransactions(user);
 
-  const users = usersData?.users ?? [];
-  const services = servicesData?.services ?? [];
-  const bookings = bookingsData?.bookings ?? [];
-  const transactions = transactionsData?.transactions ?? [];
+  const [statsData, setStatsData] = useState<AdminStats | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [services, setServices] = useState<ServiceWithVendor[]>([]);
+  const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
+  const [transactions, setTransactions] = useState<TransactionWithVendor[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (user?.role !== "admin") return;
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      try {
+        const [stats, usersRes, servicesRes, bookingsRes, transactionsRes] =
+          await Promise.all([
+            api.adminStats(),
+            api.adminUsers(),
+            api.adminServices(),
+            api.bookings(),
+            api.adminTransactions(),
+          ]);
+
+        if (cancelled) return;
+
+        setStatsData(stats);
+        setUsers(usersRes.users);
+        setServices(servicesRes.services);
+        setBookings(bookingsRes.bookings);
+        setTransactions(transactionsRes.transactions);
+      } catch {
+        // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, reloadKey]);
+
+  const isLoading = Boolean(user) && !loaded;
 
   const stats = useMemo(
     () => ({
@@ -177,9 +228,7 @@ function AdminOverview() {
           ? "Service approved — it is now live on the marketplace."
           : "Service rejected — it is hidden from customers.",
       );
-      void queryClient.invalidateQueries({ queryKey: ["admin-services"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["services"] });
+      setReloadKey((key) => key + 1);
     } catch (error) {
       toast.error(
         error instanceof ApiError

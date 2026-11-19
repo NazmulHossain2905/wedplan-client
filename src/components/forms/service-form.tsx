@@ -19,7 +19,7 @@ import { FREE_PLAN } from "@/lib/constants";
 import { fileToDataUrl } from "@/lib/helpers";
 import { validateService } from "@/lib/validations";
 import type { Service, ServiceInput } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@/lib/query-client";
 import { ImagePlus, Info, LinkIcon, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";

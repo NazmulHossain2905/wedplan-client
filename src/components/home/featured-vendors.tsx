@@ -6,19 +6,34 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import type { User } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
-export function useVendors() {
-  return useQuery({
-    queryKey: ["vendors"],
-    queryFn: () => api.vendors(),
-    staleTime: 60 * 1000,
-  });
-}
+type VendorWithServiceCount = User & { activeServiceCount: number };
 
 export function FeaturedVendors() {
-  const { data, isLoading } = useVendors();
-  const vendors = (data?.vendors ?? []).slice(0, 6);
+  const [vendors, setVendors] = useState<VendorWithServiceCount[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadVendors() {
+      try {
+        const data = await api.vendors();
+        if (!cancelled) setVendors(data.vendors.slice(0, 6));
+      } catch {
+        if (!cancelled) setVendors([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadVendors();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section
@@ -35,7 +50,7 @@ export function FeaturedVendors() {
           ? Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-64 rounded-xl" />
             ))
-          : vendors.map((vendor: User & { activeServiceCount: number }) => (
+          : vendors.map((vendor) => (
               <StaggerItem key={vendor.id} className="h-full">
                 <VendorCard
                   vendor={vendor}

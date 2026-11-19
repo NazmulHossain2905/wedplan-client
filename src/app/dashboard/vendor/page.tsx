@@ -11,13 +11,10 @@ import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  useBookings,
-  useVendorServices,
-  useVendorStats,
-} from "@/hooks/queries";
+import { api, type BookingWithDetails } from "@/lib/api";
 import { FREE_PLAN } from "@/lib/constants";
 import { formatBDT, formatDate } from "@/lib/helpers";
+import type { Service } from "@/types";
 import {
   ArrowRight,
   BadgeCheck,
@@ -30,6 +27,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function VendorOverviewPage() {
   return (
@@ -39,15 +37,52 @@ export default function VendorOverviewPage() {
   );
 }
 
+type VendorStats = {
+  totalServices: number;
+  activeServices: number;
+  pendingBookings: number;
+  acceptedBookings: number;
+  currentPlan: "free" | "premium";
+  planExpiresAt: string | null;
+};
+
 function VendorOverview() {
   const { user } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useVendorStats(user);
-  const { data: bookingsData, isLoading: bookingsLoading } = useBookings(user);
-  const { data: servicesData, isLoading: servicesLoading } =
-    useVendorServices(user);
 
-  const myBookings = bookingsData?.bookings ?? [];
-  const myServices = servicesData?.services ?? [];
+  const [stats, setStats] = useState<VendorStats | null>(null);
+  const [myBookings, setMyBookings] = useState<BookingWithDetails[]>([]);
+  const [myServices, setMyServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.role !== "vendor") return;
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      try {
+        const [statsRes, bookingsRes, servicesRes] = await Promise.all([
+          api.vendorStats(),
+          api.bookings(),
+          api.vendorServices(),
+        ]);
+        if (cancelled) return;
+        setStats(statsRes);
+        setMyBookings(bookingsRes.bookings);
+        setMyServices(servicesRes.services);
+      } catch {
+        // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const pendingBookings = myBookings.filter((b) => b.status === "pending");
   const isPremium = stats?.currentPlan === "premium";
@@ -57,7 +92,7 @@ function VendorOverview() {
   const recentBookings = myBookings.slice(0, 3);
   const recentServices = myServices.slice(0, 3);
 
-  if (statsLoading && !stats) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-28 w-full animate-pulse rounded-xl bg-muted" />
@@ -202,7 +237,7 @@ function VendorOverview() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {bookingsLoading && myBookings.length === 0 ? (
+            {isLoading && myBookings.length === 0 ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
@@ -260,7 +295,7 @@ function VendorOverview() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {servicesLoading && myServices.length === 0 ? (
+            {isLoading && myServices.length === 0 ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div

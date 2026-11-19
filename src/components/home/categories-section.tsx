@@ -4,12 +4,30 @@ import { CategoryCard } from "@/components/services/category-card";
 import { StaggerGrid, StaggerItem } from "@/components/shared/reveal";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { CATEGORIES } from "@/data/categories";
-import { usePublicServices } from "@/hooks/queries";
-import { useCallback } from "react";
+import { api, type ServiceWithVendor } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
 
 export function CategoriesSection() {
-  const { data } = usePublicServices({ limit: 100 });
-  const services = data?.services ?? [];
+  const [services, setServices] = useState<ServiceWithVendor[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const data = await api.services({ limit: 100 });
+        if (!cancelled) setServices(data.services);
+      } catch {
+        if (!cancelled) setServices([]);
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const countFor = useCallback(
     (name: string) => services.filter((s) => s.category === name).length,

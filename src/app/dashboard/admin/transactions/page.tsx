@@ -21,13 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/auth-context";
-import { useAdminTransactions } from "@/hooks/queries";
+import { api, type TransactionWithVendor } from "@/lib/api";
 import { formatBDT, formatDate, formatDateTime, initials } from "@/lib/helpers";
-import type { Transaction, User } from "@/types";
 import { BadgeDollarSign, Eye, Search, ShieldCheck } from "lucide-react";
-import { useMemo, useState } from "react";
-
-type TransactionWithVendor = Transaction & { vendor?: User };
+import { useEffect, useMemo, useState } from "react";
 
 export default function AdminTransactionsPage() {
   return (
@@ -39,13 +36,36 @@ export default function AdminTransactionsPage() {
 
 function AdminTransactions() {
   const { user: admin } = useAuth();
-  const { data, isLoading } = useAdminTransactions(admin);
+
+  const [transactions, setTransactions] = useState<TransactionWithVendor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const [viewing, setViewing] = useState<TransactionWithVendor | null>(null);
 
-  const transactions = data?.transactions ?? [];
+  useEffect(() => {
+    if (admin?.role !== "admin") return;
+
+    let cancelled = false;
+
+    async function loadTransactions() {
+      try {
+        const res = await api.adminTransactions();
+        if (!cancelled) setTransactions(res.transactions);
+      } catch {
+        // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadTransactions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [admin]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

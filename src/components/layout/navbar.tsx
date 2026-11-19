@@ -1,11 +1,5 @@
 "use client";
 
-import { Menu, UserPlus, X } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import * as React from "react";
-import { toast } from "sonner";
-// import { useAuth } from "@/contexts/auth-context";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
@@ -19,6 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { Menu, UserPlus, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -55,7 +54,7 @@ function NavLink({
 export function Navbar() {
   const { isAuthenticated, hydrated, user, signOut } = useAuth();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">

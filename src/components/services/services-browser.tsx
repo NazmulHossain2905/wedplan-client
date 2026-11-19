@@ -31,7 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { CATEGORIES } from "@/data/categories";
-import { usePublicServices } from "@/hooks/queries";
+import { api, type ServiceWithVendor } from "@/lib/api";
 import { debounce } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import type { SortOption } from "@/types";
@@ -152,16 +152,51 @@ export function ServicesBrowser() {
   }, [debouncedSearch, category, location, priceRange, sort, vendorFilter]);
 
   // Server-side search / filter / sort (only approved + active services).
-  const { data, isLoading, isFetching } = usePublicServices({
-    q: debouncedSearch || undefined,
-    category: category !== "all" ? category : undefined,
-    location: location !== "all" ? location : undefined,
-    sort,
-    limit: 100,
-  });
+  const [result, setResult] = React.useState<{
+    key: string;
+    services: ServiceWithVendor[];
+    locations: string[];
+  } | null>(null);
 
-  const services = data?.services ?? [];
-  const allLocations = data?.locations ?? [];
+  const requestKey = `${debouncedSearch}|${category}|${location}|${sort}`;
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const data = await api.services({
+          q: debouncedSearch || undefined,
+          category: category !== "all" ? category : undefined,
+          location: location !== "all" ? location : undefined,
+          sort,
+          limit: 100,
+        });
+        if (!cancelled) {
+          setResult({
+            key: requestKey,
+            services: data.services,
+            locations: data.locations,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setResult({ key: requestKey, services: [], locations: [] });
+        }
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, category, location, sort, requestKey]);
+
+  const services = result?.services ?? [];
+  const allLocations = result?.locations ?? [];
+  const isLoading = result === null;
+  const isFetching = result !== null && result.key !== requestKey;
 
   // Price-range and vendor filtering stay client-side refinements on the
   // already server-filtered list.

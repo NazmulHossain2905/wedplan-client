@@ -16,7 +16,7 @@ import { api, ApiError } from "@/lib/api";
 import { formatBDT, todayStr } from "@/lib/helpers";
 import { validateBooking } from "@/lib/validations";
 import type { Service, User } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@/lib/query-client";
 import { CalendarDays, Loader2, MapPin } from "lucide-react";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { toast } from "sonner";

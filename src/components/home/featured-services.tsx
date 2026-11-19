@@ -7,14 +7,36 @@ import {
 import { StaggerGrid, StaggerItem } from "@/components/shared/reveal";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Button } from "@/components/ui/button";
-import { usePublicServices } from "@/hooks/queries";
+import { api, type ServiceWithVendor } from "@/lib/api";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function FeaturedServices() {
+  const [services, setServices] = useState<ServiceWithVendor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Only approved + active services; featured ones are ranked first.
-  const { data, isLoading } = usePublicServices({ limit: 6 });
-  const featured = data?.services ?? [];
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const data = await api.services({ limit: 6 });
+        if (!cancelled) setServices(data.services);
+      } catch {
+        if (!cancelled) setServices([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section
@@ -42,7 +64,7 @@ export function FeaturedServices() {
           ? Array.from({ length: 6 }).map((_, i) => (
               <ServiceCardSkeleton key={i} />
             ))
-          : featured.map((service) => (
+          : services.map((service) => (
               <StaggerItem key={service.id} className="h-full">
                 <ServiceCard service={service} vendor={service.vendor} />
               </StaggerItem>

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { signUp, updateUser } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
+import { updateUser } from "@/lib/auth-client";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { fileToDataUrl, initials } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
@@ -48,9 +49,10 @@ async function uploadAvatar(file: File): Promise<string> {
   body.append("image", file);
 
   const response = await fetch("/api/upload", { method: "POST", body });
-  const payload = (await response.json().catch(() => null)) as
-    | { url?: string; error?: string }
-    | null;
+  const payload = (await response.json().catch(() => null)) as {
+    url?: string;
+    error?: string;
+  } | null;
 
   if (!response.ok || !payload?.url) {
     throw new Error(payload?.error ?? "Image upload failed.");
@@ -59,6 +61,7 @@ async function uploadAvatar(file: File): Promise<string> {
 }
 
 export function SignUpForm() {
+  const { signUp } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetRole =
@@ -112,7 +115,7 @@ export function SignUpForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await signUp.email({
+    const result = await signUp({
       name,
       email,
       password,
@@ -120,9 +123,9 @@ export function SignUpForm() {
       businessName: role === "vendor" ? businessName : undefined,
       location,
     });
-    if (error) {
+    if (!result.ok) {
       setSubmitting(false);
-      toast.error(error.message ?? "Registration failed.");
+      toast.error(result.error ?? "Registration failed.");
       return;
     }
     // Optional profile image: upload it once the session exists, then store

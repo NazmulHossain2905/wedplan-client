@@ -19,12 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
-import { useVendorServices, useVendorStats } from "@/hooks/queries";
 import { api, ApiError } from "@/lib/api";
 import { FREE_PLAN } from "@/lib/constants";
 import { formatBDT, formatDate } from "@/lib/helpers";
 import type { Service } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   FolderOpen,
   MapPin,
@@ -46,12 +44,23 @@ export default function VendorServicesPage() {
   );
 }
 
+type VendorStats = {
+  totalServices: number;
+  activeServices: number;
+  pendingBookings: number;
+  acceptedBookings: number;
+  currentPlan: "free" | "premium";
+  planExpiresAt: string | null;
+};
+
 function VendorServices() {
   const { user } = useAuth();
-  const { data, isLoading } = useVendorServices(user);
-  const { data: stats } = useVendorStats(user);
-  const queryClient = useQueryClient();
   const router = useRouter();
+
+  const [myServices, setMyServices] = React.useState<Service[]>([]);
+  const [stats, setStats] = React.useState<VendorStats | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   const [search, setSearch] = React.useState("");
   const [tab, setTab] = React.useState("all");
@@ -59,7 +68,33 @@ function VendorServices() {
   const [deleting, setDeleting] = React.useState<Service | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
-  const myServices = data?.services ?? [];
+  React.useEffect(() => {
+    if (user?.role !== "vendor") return;
+
+    let cancelled = false;
+
+    async function loadServices() {
+      try {
+        const [servicesRes, statsRes] = await Promise.all([
+          api.vendorServices(),
+          api.vendorStats(),
+        ]);
+        if (cancelled) return;
+        setMyServices(servicesRes.services);
+        setStats(statsRes);
+      } catch {
+        // Leave the current list on screen.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, reloadKey]);
 
   const activeCount =
     stats?.activeServices ??
@@ -98,9 +133,7 @@ function VendorServices() {
           ? "Service is now active and visible to customers."
           : "Service set to inactive — hidden from customers.",
       );
-      void queryClient.invalidateQueries({ queryKey: ["vendor-services"] });
-      void queryClient.invalidateQueries({ queryKey: ["vendor-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["services"] });
+      setReloadKey((key) => key + 1);
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -131,9 +164,7 @@ function VendorServices() {
       toast.success(`"${name}" has been deleted.`, {
         description: "Associated booking requests were also removed.",
       });
-      void queryClient.invalidateQueries({ queryKey: ["vendor-services"] });
-      void queryClient.invalidateQueries({ queryKey: ["vendor-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["services"] });
+      setReloadKey((key) => key + 1);
     } catch (error) {
       toast.error(
         error instanceof ApiError

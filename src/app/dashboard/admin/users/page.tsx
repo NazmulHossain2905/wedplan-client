@@ -22,13 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/auth-context";
-import { useAdminUsers } from "@/hooks/queries";
 import { api, ApiError } from "@/lib/api";
 import { formatDate, initials } from "@/lib/helpers";
 import type { User } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
 import { Ban, CircleCheck, Search, ShieldOff, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function AdminUsersPage() {
@@ -47,19 +45,46 @@ type AdminUser = User & {
 
 function AdminUsers() {
   const { user: admin } = useAuth();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewing, setViewing] = useState<AdminUser | null>(null);
   const [blocking, setBlocking] = useState<AdminUser | null>(null);
 
-  const { data, isLoading, isFetching } = useAdminUsers(admin, {
-    q: search.trim() || undefined,
-    role: roleFilter !== "all" ? roleFilter : undefined,
-  });
+  const [result, setResult] = useState<{
+    key: string;
+    users: AdminUser[];
+  } | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const users = data?.users ?? [];
+  const searchParam = search.trim() || undefined;
+  const roleParam = roleFilter !== "all" ? roleFilter : undefined;
+  const requestKey = `${searchParam ?? ""}|${roleParam ?? ""}|${reloadKey}`;
+
+  useEffect(() => {
+    if (admin?.role !== "admin") return;
+
+    let cancelled = false;
+
+    async function loadUsers() {
+      try {
+        const res = await api.adminUsers({ q: searchParam, role: roleParam });
+        if (!cancelled) setResult({ key: requestKey, users: res.users });
+      } catch {
+        if (!cancelled) setResult({ key: requestKey, users: [] });
+      }
+    }
+
+    void loadUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [admin, requestKey, searchParam, roleParam]);
+
+  const users = result?.users ?? [];
+  const isLoading = result === null;
+  const isFetching = result !== null && result.key !== requestKey;
 
   const filtered = useMemo(
     () =>
@@ -93,8 +118,7 @@ function AdminUsers() {
             : undefined,
         },
       );
-      void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      setReloadKey((key) => key + 1);
     } catch (error) {
       toast.error(
         error instanceof ApiError

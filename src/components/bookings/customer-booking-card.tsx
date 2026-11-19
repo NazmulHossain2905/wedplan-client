@@ -10,7 +10,7 @@ import { api, ApiError } from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import type { Booking, Service, User } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@/lib/query-client";
 import { Ban, CalendarDays, Eye, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
