@@ -9,7 +9,7 @@
  * bundles), but reading one still throws a clear error.
  *
  * Server-only: MONGODB_URI, DB_NAME, BETTER_AUTH_SECRET, BETTER_AUTH_URL,
- * GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
+ * GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, IMGBB_API_KEY.
  * Client-safe: NEXT_PUBLIC_API_URL (inlined at build time).
  */
 
@@ -122,6 +122,14 @@ export const env = {
       process.env.GOOGLE_CLIENT_SECRET,
       "",
     );
+  },
+
+  /**
+   * ImgBB API key used to host profile/service images. Empty when image
+   * hosting is not configured — uploads then return a clear error.
+   */
+  get IMGBB_API_KEY() {
+    return serverValue("IMGBB_API_KEY", process.env.IMGBB_API_KEY, "");
   },
 
   /** Base URL of the WedPlan backend API. Safe to use in the browser. */

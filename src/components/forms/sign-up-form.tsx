@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/auth-context";
-import { api } from "@/lib/api";
+import { signUp, updateUser } from "@/lib/auth-client";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { fileToDataUrl, initials } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
@@ -43,8 +42,23 @@ const ROLE_OPTIONS = [
   },
 ];
 
+/** Sends the file to our server route, which hosts it on ImgBB. */
+async function uploadAvatar(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("image", file);
+
+  const response = await fetch("/api/upload", { method: "POST", body });
+  const payload = (await response.json().catch(() => null)) as
+    | { url?: string; error?: string }
+    | null;
+
+  if (!response.ok || !payload?.url) {
+    throw new Error(payload?.error ?? "Image upload failed.");
+  }
+  return payload.url;
+}
+
 export function SignUpForm() {
-  const { signUp } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetRole =
@@ -98,7 +112,7 @@ export function SignUpForm() {
       return;
     }
     setSubmitting(true);
-    const result = await signUp({
+    const { error } = await signUp.email({
       name,
       email,
       password,
@@ -106,19 +120,26 @@ export function SignUpForm() {
       businessName: role === "vendor" ? businessName : undefined,
       location,
     });
-    if (!result.ok) {
+    if (error) {
       setSubmitting(false);
-      toast.error(result.error ?? "Registration failed.");
+      toast.error(error.message ?? "Registration failed.");
       return;
     }
-    // Optional profile image: upload now that the session exists.
+    // Optional profile image: upload it once the session exists, then store
+    // the hosted ImgBB URL on the new user.
     if (avatarFile) {
       try {
-        const { url } = await api.uploadImage(avatarFile);
-        await api.updateProfile({ name: name.trim(), image: url });
-      } catch {
+        const imageUrl = await uploadAvatar(avatarFile);
+        await updateUser({ image: imageUrl });
+      } catch (uploadError) {
         toast.warning(
           "Account created, but the profile image could not be uploaded.",
+          {
+            description:
+              uploadError instanceof Error
+                ? uploadError.message
+                : "You can add one later from your profile.",
+          },
         );
       }
     }
@@ -129,7 +150,7 @@ export function SignUpForm() {
           ? "Your vendor account is ready — add your first service to get started."
           : "Start exploring wedding services for your big day.",
     });
-    router.push(dashboardHomeForRole(role));
+    router.replace(dashboardHomeForRole(role));
   };
 
   return (
