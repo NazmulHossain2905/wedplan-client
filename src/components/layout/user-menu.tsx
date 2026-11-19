@@ -9,7 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-// import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { RoleBadge } from "@/components/shared/badges";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -26,14 +26,12 @@ import {
 import { DEMO_ACCOUNTS } from "@/data/users";
 import { DEMO_PASSWORD, dashboardHomeForRole } from "@/lib/constants";
 import { initials } from "@/lib/helpers";
-import { User } from "@/types";
 
 /**
  * Quick demo account switching for evaluation — signs in with the documented
  * demo credentials through the real authentication API.
  */
 export function DemoAccountSwitcher({ onDone }: { onDone?: () => void }) {
-  const router = useRouter();
   const [switching, setSwitching] = React.useState(false);
 
   const handleSwitch = async (email: string, label: string) => {
@@ -91,21 +89,10 @@ export function DemoAccountSwitcher({ onDone }: { onDone?: () => void }) {
 }
 
 export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
-  // const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
 
-  // if (!user) return null;
-
-  const user: User = {
-    name: "Nazmul Hossain",
-    email: "nazmul@gmail.com",
-    id: "",
-    image: "",
-    role: "customer",
-    isBlocked: false,
-    subscriptionPlan: "free",
-    joinedAt: "",
-  };
+  if (!user) return null;
 
   const go = (path: string) => {
     onNavigate?.();
@@ -168,10 +155,12 @@ export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
         <DropdownMenuItem
           variant="destructive"
           onClick={() => {
-            // void signOut();
-            onNavigate?.();
-            toast.success("You have been signed out.");
-            router.push("/");
+            void (async () => {
+              await signOut();
+              onNavigate?.();
+              toast.success("You have been signed out.");
+              router.replace("/");
+            })();
           }}
         >
           <LogOut aria-hidden className="size-4" />

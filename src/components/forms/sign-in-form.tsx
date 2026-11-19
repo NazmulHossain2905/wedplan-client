@@ -1,17 +1,14 @@
 "use client";
 
 import { Logo } from "@/components/shared/logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/auth-context";
-import { DEMO_ACCOUNTS } from "@/data/users";
+import { signIn } from "@/lib/auth-client";
 import { dashboardHomeForRole, DEMO_PASSWORD } from "@/lib/constants";
-import { initials } from "@/lib/helpers";
 import {
   Eye,
   EyeOff,
@@ -19,15 +16,14 @@ import {
   LogIn,
   ShieldCheck,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { GoogleIcon } from "../shared/social-icons";
 
 export function SignInForm() {
-  const { signIn, googleDemoSignIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
@@ -53,7 +49,12 @@ export function SignInForm() {
     toast.success(`Welcome back, ${name.split(" ")[0]}!`, {
       description: "You are now signed in to WedPlan.",
     });
-    router.push(redirectTo ?? dashboardHomeForRole(role));
+    // Only allow same-app paths from ?redirect to avoid an open redirect.
+    const target =
+      redirectTo?.startsWith("/") && !redirectTo.startsWith("//")
+        ? redirectTo
+        : dashboardHomeForRole(role);
+    router.replace(target);
   };
 
   const handleSubmit = async (e: SyntheticEvent) => {
@@ -63,42 +64,34 @@ export function SignInForm() {
       return;
     }
     setSubmitting(true);
-    const result = await signIn(email, password, remember);
+    const { data, error } = await signIn.email({
+      email,
+      password,
+      rememberMe: remember,
+    });
     setSubmitting(false);
-    if (!result.ok || !result.user) {
-      toast.error(result.error ?? "Sign in failed.");
+    if (error || !data.user) {
+      toast.error(error?.message ?? "Sign in failed.");
       return;
     }
-    finishSignIn(result.user.name, result.user.role);
+    finishSignIn(data.user.name, data.user.role as string);
   };
 
-  const handleDemoSignIn = async (
-    accountEmail: string,
-    accountName: string,
-  ) => {
-    const result = await signIn(accountEmail, DEMO_PASSWORD);
-    if (!result.ok || !result.user) {
-      toast.error(result.error ?? "Could not sign in with this demo account.");
-      return;
-    }
-    finishSignIn(accountName, result.user.role);
-  };
-
-  const handleGoogle = async () => {
-    if (googleParam === "demo") {
-      toast.info("Google OAuth is not configured in this environment.", {
-        description: "Signing you in with the demo Google account instead.",
-      });
-    }
-    setGoogleLoading(true);
-    const result = await googleDemoSignIn();
-    setGoogleLoading(false);
-    if (!result.ok || !result.user) {
-      toast.error(result.error ?? "Google sign-in failed.");
-      return;
-    }
-    finishSignIn(result.user.name, result.user.role);
-  };
+  // const handleGoogle = async () => {
+  //   if (googleParam === "demo") {
+  //     toast.info("Google OAuth is not configured in this environment.", {
+  //       description: "Signing you in with the demo Google account instead.",
+  //     });
+  //   }
+  //   setGoogleLoading(true);
+  //   const result = await googleDemoSignIn();
+  //   setGoogleLoading(false);
+  //   if (!result.ok || !result.user) {
+  //     toast.error(result.error ?? "Google sign-in failed.");
+  //     return;
+  //   }
+  //   finishSignIn(result.user.name, result.user.role);
+  // };
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-20">
@@ -215,7 +208,7 @@ export function SignInForm() {
           size="lg"
           className="w-full"
           disabled={googleLoading}
-          onClick={() => void handleGoogle()}
+          // onClick={() => void handleGoogle()}
         >
           {googleLoading ? (
             <Loader2 aria-hidden className="size-4 animate-spin" />
@@ -250,37 +243,7 @@ export function SignInForm() {
               {DEMO_PASSWORD}
             </code>
           </p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {DEMO_ACCOUNTS.map((account) => (
-              <button
-                key={account.id}
-                type="button"
-                onClick={() =>
-                  void handleDemoSignIn(account.email, account.name)
-                }
-                className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left shadow-xs transition-all hover:-translate-y-0.5 hover:border-rose-soft hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Avatar className="size-9 border border-border">
-                  <AvatarImage src={account.image} alt="" />
-                  <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
-                    {initials(account.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-foreground">
-                    {account.label}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {account.name}
-                  </span>
-                </span>
-                <UserRound
-                  aria-hidden
-                  className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-burgundy"
-                />
-              </button>
-            ))}
-          </div>
+          <div className="grid gap-2 sm:grid-cols-2"></div>
         </div>
       </div>
 
@@ -303,29 +266,6 @@ export function SignInForm() {
         </div>
       </div>
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" className="size-4">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18A10.97 10.97 0 0 0 1 12c0 1.77.43 3.45 1.18 4.94l3.66-2.84Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38Z"
-      />
-    </svg>
   );
 }
 

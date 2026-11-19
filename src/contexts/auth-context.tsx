@@ -1,15 +1,40 @@
 "use client";
 
-import { api, ApiError } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 import type { User } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 
 /**
- * Authentication context backed by the server session (httpOnly JWT cookie).
- * The navbar updates immediately after sign-in / sign-out because the
- * session cache is updated synchronously.
+ * Authentication context backed by Better Auth.
+ *
+ * Better Auth is the single source of truth for the session: this provider,
+ * `<AuthRedirect>` and the dashboard guards all read the same `useSession`
+ * state. Previously this provider used the demo API client's
+ * `/api/auth/session` endpoint, which does not exist in this app (Better Auth
+ * serves `/api/auth/get-session`). The guards therefore always saw a signed-out
+ * user while Better Auth saw a signed-in one, producing an endless
+ * sign-in ↔ dashboard redirect loop.
  */
+
+export interface SignUpInput {
+  name: string;
+  email: string;
+  password: string;
+  role?: "customer" | "vendor" | "admin";
+  businessName?: string;
+  specialty?: string;
+  location?: string;
+  phone?: string;
+  bio?: string;
+  image?: string;
+}
+
+interface AuthResult {
+  ok: boolean;
+  error?: string;
+  user?: User;
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -19,11 +44,9 @@ interface AuthContextValue {
     email: string,
     password: string,
     remember?: boolean,
-  ) => Promise<{ ok: boolean; error?: string; user?: User }>;
-  signUp: (
-    input: Record<string, unknown>,
-  ) => Promise<{ ok: boolean; error?: string; user?: User }>;
-  googleDemoSignIn: () => Promise<{ ok: boolean; error?: string; user?: User }>;
+  ) => Promise<AuthResult>;
+  signUp: (input: SignUpInput) => Promise<AuthResult>;
+  googleDemoSignIn: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -37,34 +60,20 @@ export function AuthProvider({
   children: React.ReactNode;
   initialUser?: User | null;
 }) {
-  const [user, setUser] = React.useState<User | null>(initialUser);
-  const [hydrated, setHydrated] = React.useState(Boolean(initialUser));
+  const { data: session, isPending, refetch } = authClient.useSession();
   const queryClient = useQueryClient();
 
-  // Restore the session from the server cookie on first mount (keeps users
-  // authenticated across page refreshes).
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { user: sessionUser } = await api.session();
-        if (!cancelled) setUser(sessionUser);
-      } catch {
-        if (!cancelled) setUser(null);
-      } finally {
-        if (!cancelled) setHydrated(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Better Auth's session user carries the additional fields defined in
+  // `lib/auth.ts` (role, businessName, isBlocked, subscriptionPlan, …), so it
+  // already matches the app's `User` shape.
+  const user = React.useMemo(
+    () => (session?.user as unknown as User | undefined) ?? initialUser,
+    [session?.user, initialUser],
+  );
 
   const applyUser = React.useCallback(
     (nextUser: User | null) => {
-      setUser(nextUser);
       queryClient.setQueryData(["session"], nextUser);
-      if (!nextUser) queryClient.removeQueries({ queryKey: ["session"] });
       // Role/data caches belong to the previous identity.
       queryClient.removeQueries({
         predicate: (q) => q.queryKey[0] !== "session",
@@ -75,72 +84,69 @@ export function AuthProvider({
 
   const signIn = React.useCallback<AuthContextValue["signIn"]>(
     async (email, password, remember = true) => {
-      try {
-        const { user: signedIn } = await api.signIn(email, password, remember);
-        applyUser(signedIn);
-        return { ok: true, user: signedIn };
-      } catch (error) {
-        return { ok: false, error: toMessage(error) };
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe: remember,
+      });
+      if (error) {
+        return { ok: false, error: error.message ?? "Sign in failed." };
       }
+      const nextUser = (data?.user as unknown as User) ?? null;
+      if (nextUser) applyUser(nextUser);
+      return { ok: true, user: nextUser ?? undefined };
     },
     [applyUser],
   );
 
   const signUp = React.useCallback<AuthContextValue["signUp"]>(
     async (input) => {
-      try {
-        const { user: created } = await api.signUp(input);
-        applyUser(created);
-        return { ok: true, user: created };
-      } catch (error) {
-        return { ok: false, error: toMessage(error) };
+      const { data, error } = await authClient.signUp.email(input);
+      if (error) {
+        return { ok: false, error: error.message ?? "Registration failed." };
       }
+      const nextUser = (data?.user as unknown as User) ?? null;
+      if (nextUser) applyUser(nextUser);
+      return { ok: true, user: nextUser ?? undefined };
     },
     [applyUser],
   );
 
-  const googleDemoSignIn = React.useCallback<
-    AuthContextValue["googleDemoSignIn"]
-  >(async () => {
-    try {
-      const { user: created } = await api.googleDemo();
-      applyUser(created);
-      return { ok: true, user: created };
-    } catch (error) {
-      return { ok: false, error: toMessage(error) };
+  const googleDemoSignIn = React.useCallback(async () => {
+    const { error } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+    });
+    if (error) {
+      return { ok: false, error: error.message ?? "Google sign-in failed." };
     }
-  }, [applyUser]);
+    return { ok: true };
+  }, []);
 
   const signOut = React.useCallback(async () => {
     try {
-      await api.signOut();
+      await authClient.signOut();
     } finally {
       applyUser(null);
     }
   }, [applyUser]);
 
   const refresh = React.useCallback(async () => {
-    try {
-      const { user: sessionUser } = await api.session();
-      setUser(sessionUser);
-      queryClient.setQueryData(["session"], sessionUser);
-    } catch {
-      setUser(null);
-    }
-  }, [queryClient]);
+    await refetch();
+  }, [refetch]);
 
   const value = React.useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: Boolean(user) && !user?.isBlocked,
-      hydrated,
+      hydrated: !isPending,
       signIn,
       signUp,
       googleDemoSignIn,
       signOut,
       refresh,
     }),
-    [user, hydrated, signIn, signUp, googleDemoSignIn, signOut, refresh],
+    [user, isPending, signIn, signUp, googleDemoSignIn, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -150,9 +156,4 @@ export function useAuth(): AuthContextValue {
   const ctx = React.useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
-}
-
-function toMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return "Something went wrong. Please try again.";
 }
