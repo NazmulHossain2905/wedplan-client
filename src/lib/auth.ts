@@ -108,6 +108,43 @@ export const auth = betterAuth({
   },
 
   /**
+   * The sign-up form may ask for "vendor", but nobody may sign themselves up
+   * as an admin. The Express backend trusts the role stored by Better Auth,
+   * so sanitize it here, before the user document is ever written.
+   * Admin accounts are created by listing their email in ADMIN_EMAILS.
+   */
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const allowedAdminEmails = env.ADMIN_EMAILS.split(",")
+            .map((email) => email.trim().toLowerCase())
+            .filter(Boolean);
+
+          const isBootstrapAdmin = allowedAdminEmails.includes(
+            String(user.email ?? "").toLowerCase(),
+          );
+
+          const role = isBootstrapAdmin
+            ? "admin"
+            : user.role === "vendor"
+              ? "vendor"
+              : "customer";
+
+          return {
+            data: {
+              ...user,
+              role,
+              isBlocked: false,
+              subscriptionPlan: "free",
+            },
+          };
+        },
+      },
+    },
+  },
+
+  /**
    * Issues short-lived JWTs (GET /api/auth/token) and publishes the public
    * keys (GET /api/auth/jwks) so the Express backend can verify them.
    */
