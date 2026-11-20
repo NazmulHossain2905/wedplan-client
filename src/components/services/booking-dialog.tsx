@@ -16,7 +16,6 @@ import { api, ApiError } from "@/lib/api";
 import { formatBDT, todayStr } from "@/lib/helpers";
 import { validateBooking } from "@/lib/validations";
 import type { Service, User } from "@/types";
-import { useQueryClient } from "@/lib/query-client";
 import { CalendarDays, Loader2, MapPin } from "lucide-react";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -35,7 +34,6 @@ export function BookingDialog({
   vendor,
 }: BookingDialogProps) {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [eventDate, setEventDate] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [message, setMessage] = useState("");
@@ -83,8 +81,6 @@ export function BookingDialog({
       toast.success("Booking request sent!", {
         description: `${vendor?.businessName ?? "The vendor"} will review your request and respond soon.`,
       });
-      void queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      void queryClient.invalidateQueries({ queryKey: ["customer-stats"] });
       onOpenChange(false);
     } catch (error) {
       toast.error(

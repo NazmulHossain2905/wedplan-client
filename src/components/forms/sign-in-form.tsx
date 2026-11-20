@@ -8,15 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { dashboardHomeForRole, DEMO_PASSWORD } from "@/lib/constants";
-import {
-  Eye,
-  EyeOff,
-  Loader2,
-  LogIn,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { dashboardHomeForRole } from "@/lib/constants";
+import { Eye, EyeOff, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -218,34 +211,16 @@ export function SignInForm() {
             Create an account
           </Link>
         </p>
-
-        {/* Quick demo access */}
-        <div className="mt-8 rounded-xl border border-dashed border-rose-soft bg-rose-tint/60 p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles aria-hidden className="size-4 text-rose" />
-            <h2 className="font-serif text-base font-semibold text-foreground">
-              Quick Demo Access
-            </h2>
-          </div>
-          <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-            One click signs you in as a seeded demo account. Password for all
-            demo accounts:{" "}
-            <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-burgundy">
-              {DEMO_PASSWORD}
-            </code>
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2"></div>
-        </div>
       </div>
 
       {/* Image panel */}
-      <div className="relative hidden h-[560px] overflow-hidden rounded-2xl shadow-lg lg:block">
+      <div className="relative hidden h-140 overflow-hidden rounded-2xl shadow-lg lg:block">
         <img
           src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=900&q=80"
           alt="A romantic bridal bouquet held during a wedding ceremony"
           className="absolute inset-0 size-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#3a2129]/85 via-[#3a2129]/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#3a2129]/85 via-[#3a2129]/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-10">
           <ShieldCheck aria-hidden className="mb-3 size-8 text-rose-soft" />
           <p className="font-serif text-2xl font-medium leading-snug text-white">

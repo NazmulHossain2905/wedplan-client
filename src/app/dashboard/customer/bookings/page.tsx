@@ -32,6 +32,8 @@ function CustomerBookings() {
   const [data, setData] = useState<BookingWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<string>("all");
+  // Bumped after a booking is cancelled so the list reloads.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -54,7 +56,7 @@ function CustomerBookings() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, reloadKey]);
 
   const myBookings = useMemo(
     () =>
@@ -141,6 +143,7 @@ function CustomerBookings() {
               booking={booking}
               service={booking.service}
               vendor={booking.vendor}
+              onChanged={() => setReloadKey((key) => key + 1)}
             />
           ))}
         </div>

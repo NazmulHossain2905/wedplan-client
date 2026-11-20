@@ -19,10 +19,9 @@ import { FREE_PLAN } from "@/lib/constants";
 import { fileToDataUrl } from "@/lib/helpers";
 import { validateService } from "@/lib/validations";
 import type { Service, ServiceInput } from "@/types";
-import { useQueryClient } from "@/lib/query-client";
 import { ImagePlus, Info, LinkIcon, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import * as React from "react";
+import { SyntheticEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const COMMON_LOCATIONS = [
@@ -45,31 +44,22 @@ interface ServiceFormProps {
 
 export function ServiceForm({ mode, service }: ServiceFormProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [uploading, setUploading] = React.useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const [serviceName, setServiceName] = React.useState(
-    service?.serviceName ?? "",
-  );
-  const [category, setCategory] = React.useState(service?.category ?? "");
-  const [description, setDescription] = React.useState(
-    service?.description ?? "",
-  );
-  const [price, setPrice] = React.useState(
-    service ? String(service.price) : "",
-  );
-  const [location, setLocation] = React.useState(service?.location ?? "");
-  const [images, setImages] = React.useState<string[]>(service?.images ?? []);
-  const [imageUrl, setImageUrl] = React.useState("");
-  const [isAvailable, setIsAvailable] = React.useState(
-    service?.isAvailable ?? true,
-  );
-  const [submitting, setSubmitting] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [serviceName, setServiceName] = useState(service?.serviceName ?? "");
+  const [category, setCategory] = useState(service?.category ?? "");
+  const [description, setDescription] = useState(service?.description ?? "");
+  const [price, setPrice] = useState(service ? String(service.price) : "");
+  const [location, setLocation] = useState(service?.location ?? "");
+  const [images, setImages] = useState<string[]>(service?.images ?? []);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isAvailable, setIsAvailable] = useState(service?.isAvailable ?? true);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Warn before leaving with unsaved edits (values differ from the saved service).
-  const dirty = React.useMemo(() => {
+  const dirty = useMemo(() => {
     if (mode === "create") {
       return Boolean(
         serviceName.trim() ||
@@ -101,7 +91,7 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
     images,
   ]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!dirty || submitting) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
@@ -160,7 +150,7 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     if (!user) return;
     const validationError = validateService({
@@ -223,9 +213,6 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
               : undefined,
         },
       );
-      void queryClient.invalidateQueries({ queryKey: ["vendor-services"] });
-      void queryClient.invalidateQueries({ queryKey: ["vendor-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["services"] });
       router.push("/dashboard/vendor/services");
     } catch (error) {
       toast.error(

@@ -174,7 +174,7 @@ function RoleHeader({ role }: { role: string }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",
+        "flex items-center gap-2 rounded-lg px-3 py-3 text-xs font-semibold",
         cfg.className,
       )}
     >
@@ -214,11 +214,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         roleHome={user ? dashboardHomeForRole(user.role) : ""}
         onNavigate={onNavigate}
       />
-      <div className="mt-auto rounded-lg border border-dashed border-rose-soft bg-rose-tint/50 p-3.5 text-xs leading-relaxed text-muted-foreground">
-        <p className="mb-1 font-semibold text-burgundy">Secure area</p>
-        Your session is verified on the server for every request. Use the
-        profile menu to switch demo accounts for testing.
-      </div>
     </div>
   );
 

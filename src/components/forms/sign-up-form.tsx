@@ -27,6 +27,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { GoogleIcon } from "../shared/social-icons";
+import { Separator } from "../ui/separator";
 
 const ROLE_OPTIONS = [
   {
@@ -61,7 +63,7 @@ async function uploadAvatar(file: File): Promise<string> {
 }
 
 export function SignUpForm() {
-  const { signUp } = useAuth();
+  const { signUp, googleSignIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetRole =
@@ -77,6 +79,7 @@ export function SignUpForm() {
   const [avatar, setAvatar] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const pwChecks = validatePassword(password);
 
@@ -154,6 +157,27 @@ export function SignUpForm() {
           : "Start exploring wedding services for your big day.",
     });
     router.replace(dashboardHomeForRole(role));
+  };
+
+  const finishSignIn = (name: string, role: string) => {
+    toast.success(`Welcome back, ${name.split(" ")[0]}!`, {
+      description: "You are now signed in to WedPlan.",
+    });
+    router.replace(dashboardHomeForRole(role));
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const result = await googleSignIn();
+    setGoogleLoading(false);
+
+    if (!result.ok || !result.user) {
+      if (result.error) {
+        toast.error(result.error ?? "Google sign-in failed.");
+      }
+      return;
+    }
+    finishSignIn(result.user.name, result.user.role);
   };
 
   return (
@@ -400,6 +424,30 @@ export function SignUpForm() {
             )}
           </Button>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
+          <Separator className="flex-1" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-full"
+          disabled={googleLoading}
+          onClick={() => void handleGoogle()}
+        >
+          {googleLoading ? (
+            <Loader2 aria-hidden className="size-4 animate-spin" />
+          ) : (
+            <GoogleIcon />
+          )}{" "}
+          Continue with Google (Customer)
+        </Button>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
           Already have an account?{" "}

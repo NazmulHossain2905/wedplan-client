@@ -10,7 +10,6 @@ import { api, ApiError } from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import type { Booking, Service, User } from "@/types";
-import { useQueryClient } from "@/lib/query-client";
 import { Ban, CalendarDays, Eye, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,14 +18,16 @@ interface CustomerBookingCardProps {
   booking: Booking;
   service?: Service;
   vendor?: User;
+  /** Called after the booking is cancelled so the parent can reload its list. */
+  onChanged?: () => void;
 }
 
 export function CustomerBookingCard({
   booking,
   service,
   vendor,
+  onChanged,
 }: CustomerBookingCardProps) {
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -44,8 +45,7 @@ export function CustomerBookingCard({
         description:
           "The vendor has been notified that you withdrew this request.",
       });
-      void queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      void queryClient.invalidateQueries({ queryKey: ["customer-stats"] });
+      onChanged?.();
     } catch (error) {
       toast.error(
         error instanceof ApiError

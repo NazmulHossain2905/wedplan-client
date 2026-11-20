@@ -45,6 +45,8 @@ function CustomerOverview() {
   const [allBookings, setAllBookings] = useState<BookingWithDetails[]>([]);
   const [statsData, setStatsData] = useState<CustomerStats | null>(null);
   const [serviceList, setServiceList] = useState<ServiceWithVendor[]>([]);
+  // Bumped after a booking is cancelled so the overview reloads.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (user?.role !== "customer") return;
@@ -72,7 +74,7 @@ function CustomerOverview() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, reloadKey]);
 
   const myBookings = useMemo(
     () =>
@@ -209,6 +211,7 @@ function CustomerOverview() {
                   booking={booking}
                   service={booking.service}
                   vendor={booking.vendor}
+                  onChanged={() => setReloadKey((key) => key + 1)}
                 />
               ))}
             </div>

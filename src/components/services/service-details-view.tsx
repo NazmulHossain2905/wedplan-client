@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { usePublicServices, useService } from "@/hooks/queries";
+import { api, type ServiceWithVendor } from "@/lib/api";
 import { formatBDT, initials } from "@/lib/helpers";
 import {
   BadgeCheck,
@@ -58,10 +58,68 @@ function BookingNotice({
 
 export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
   const { user, hydrated } = useAuth();
-  const { data, isLoading, error } = useService(serviceId);
+
+  // The service itself, fetched once when the page loads (or the id changes).
+  const [service, setService] = React.useState<ServiceWithVendor | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+
+  // Similar services in the same category, fetched after the service loads.
+  const [related, setRelated] = React.useState<ServiceWithVendor[]>([]);
+  const [relatedLoading, setRelatedLoading] = React.useState(true);
+
   const [bookingOpen, setBookingOpen] = React.useState(false);
 
-  const service = data?.service;
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadService() {
+      try {
+        const res = await api.service(serviceId);
+        if (cancelled) return;
+        setService(res.service);
+        setError(false);
+      } catch {
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadService();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceId]);
+
+  React.useEffect(() => {
+    if (!service) return;
+
+    const category = service.category;
+    let cancelled = false;
+
+    async function loadRelated() {
+      try {
+        const res = await api.services({ category, limit: 4 });
+        if (cancelled) return;
+        setRelated(
+          res.services.filter((s) => s.id !== serviceId).slice(0, 3),
+        );
+      } catch {
+        // Related services are optional — an empty list is fine.
+      } finally {
+        if (!cancelled) setRelatedLoading(false);
+      }
+    }
+
+    void loadRelated();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [service, serviceId]);
+
   const vendor = service?.vendor;
 
   const isOwner = Boolean(user && service && user.id === service.vendorId);
@@ -71,13 +129,6 @@ export function ServiceDetailsView({ serviceId }: { serviceId: string }) {
   const publiclyVisible = Boolean(
     service && service.status === "approved" && service.isAvailable,
   );
-
-  const { data: relatedData, isLoading: relatedLoading } = usePublicServices(
-    service ? { category: service.category, limit: 4 } : { limit: 4 },
-  );
-  const related = (relatedData?.services ?? [])
-    .filter((s) => s.id !== serviceId)
-    .slice(0, 3);
 
   if (isLoading || !hydrated) {
     return (
