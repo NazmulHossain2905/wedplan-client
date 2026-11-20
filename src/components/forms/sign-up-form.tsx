@@ -171,13 +171,15 @@ export function SignUpForm() {
     const result = await googleSignIn();
     setGoogleLoading(false);
 
-    if (!result.ok || !result.user) {
+    if (!result.ok) {
       if (result.error) {
         toast.error(result.error ?? "Google sign-in failed.");
       }
       return;
     }
-    finishSignIn(result.user.name, result.user.role);
+    // Google uses a redirect flow: there is no user object to read here.
+    // The /dashboard layout waits for the session, then routes by role.
+    router.replace("/dashboard");
   };
 
   return (
