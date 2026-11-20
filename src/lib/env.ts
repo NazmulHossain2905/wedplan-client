@@ -110,6 +110,14 @@ export const env = {
     return serverValue("DB_NAME", process.env.DB_NAME);
   },
 
+  /**
+   * Comma-separated emails that may be created with the admin role.
+   * Empty by default: sign-ups can only become customers or vendors.
+   */
+  get ADMIN_EMAILS() {
+    return serverValue("ADMIN_EMAILS", process.env.ADMIN_EMAILS, "");
+  },
+
   /** Google OAuth client id. Empty when Google sign-in is not configured. */
   get GOOGLE_CLIENT_ID() {
     return serverValue("GOOGLE_CLIENT_ID", process.env.GOOGLE_CLIENT_ID, "");
