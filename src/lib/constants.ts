@@ -45,9 +45,7 @@ export const PREMIUM_PLAN = {
   maxActiveServices: Infinity,
   features: [
     "Unlimited active services",
-    "Premium vendor badge",
-    "Priority placement in search",
-    "Featured on the homepage",
+    "30 days of premium access",
     "All Free plan features",
   ],
 } as const;
