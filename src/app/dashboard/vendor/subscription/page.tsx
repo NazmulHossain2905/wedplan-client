@@ -18,7 +18,6 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,7 +40,6 @@ type VendorStats = {
 
 function VendorSubscription() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -85,13 +83,9 @@ function VendorSubscription() {
     setStarting(true);
     try {
       const session = await api.createCheckout();
-      if (session.url.startsWith("http")) {
-        // Real Stripe Checkout (test mode) — redirect away.
-        window.location.href = session.url;
-      } else {
-        // Built-in sandbox checkout page.
-        router.push(session.url);
-      }
+      // Stripe Checkout is hosted by Stripe; Premium is activated by the
+      // verified webhook, not by arriving back at /payment/success.
+      window.location.href = session.url;
     } catch (error) {
       toast.error(
         error instanceof ApiError
