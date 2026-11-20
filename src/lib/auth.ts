@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
+import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
 const client = new MongoClient(env.MONGODB_URI);
@@ -105,6 +106,12 @@ export const auth = betterAuth({
   socialProviders: {
     ...googleProvider,
   },
+
+  /**
+   * Issues short-lived JWTs (GET /api/auth/token) and publishes the public
+   * keys (GET /api/auth/jwks) so the Express backend can verify them.
+   */
+  plugins: [jwt()],
 
   database: mongodbAdapter(db, { client }),
 });
