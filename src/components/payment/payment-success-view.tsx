@@ -23,9 +23,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 /**
- * Payment success page. The status shown here is SERVER-VERIFIED via
- * /api/payment/verify (and the webhook has already done the activation);
- * the success redirect itself is never trusted to grant Premium.
+ * Payment success page. The status shown here is read from the server's
+ * /api/subscription/status endpoint, which is read-only. The webhook has
+ * already done the activation; this redirect never grants Premium itself.
  */
 interface PaymentResult {
   status: string;
@@ -54,13 +54,21 @@ export function PaymentSuccessView() {
 
     async function verify() {
       try {
-        const result = await api.verifyPayment(sessionId!);
+        const result = await api.subscriptionStatus(sessionId!);
         if (cancelled) return;
 
-        setData(result);
+        const mapped: PaymentResult = {
+          status: result.transaction.paymentStatus,
+          amount: result.transaction.amount,
+          currency: result.transaction.currency ?? "BDT",
+          plan: result.plan,
+          activated: result.activated,
+        };
+
+        setData(mapped);
         setDone(true);
 
-        if (result.status === "processing") {
+        if (mapped.status === "processing") {
           timer = setTimeout(() => void verify(), 1500);
         }
       } catch {

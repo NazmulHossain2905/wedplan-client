@@ -2,30 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { api } from "@/lib/api";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { CircleX, CreditCard, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 
-/**
- * Cancelled-checkout confirmation. Rendered inside a <Suspense> boundary
- * (see app/payment/cancel/page.tsx) because it reads `useSearchParams()`.
- */
+/** Shown when the vendor leaves Stripe Checkout before paying. */
 export function PaymentCancelView() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
   const { user } = useAuth();
-
-  // Mark the open checkout session as failed so it cannot be completed later.
-  useEffect(() => {
-    if (sessionId) {
-      void api.cancelPayment(sessionId).catch(() => {
-        // Already processed or expired — nothing to do.
-      });
-    }
-  }, [sessionId]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-linear-to-b from-amber-50 via-background to-background px-4 py-16">
@@ -49,12 +32,9 @@ export function PaymentCancelView() {
             <CreditCard aria-hidden className="size-4" /> What happens now?
           </p>
           <ul className="mt-2.5 space-y-1.5 text-sm leading-relaxed text-amber-800/85">
-            <li>• Your Free plan benefits stay exactly as they were.</li>
-            <li>
-              • The abandoned checkout session has been closed and recorded as
-              failed.
-            </li>
-            <li>• You can restart the upgrade whenever you&apos;re ready.</li>
+            <li>&#8226; Your Free plan benefits stay exactly as they were.</li>
+            <li>&#8226; Stripe never charged you, so nothing needs reversing.</li>
+            <li>&#8226; You can restart the upgrade whenever you&apos;re ready.</li>
           </ul>
         </div>
 
@@ -65,11 +45,7 @@ export function PaymentCancelView() {
             </Link>
           </Button>
           <Button asChild size="lg" className="gap-2 shadow-sm">
-            <Link
-              href={
-                user ? dashboardHomeForRole(user.role) : "/dashboard/vendor"
-              }
-            >
+            <Link href={user ? dashboardHomeForRole(user.role) : "/dashboard/vendor"}>
               Back to Dashboard
             </Link>
           </Button>
