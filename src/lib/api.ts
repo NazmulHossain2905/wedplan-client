@@ -1,9 +1,33 @@
 "use client";
 
 /**
- * Typed API client. Every request sends the httpOnly session cookie
- * (credentials: "include") so protected routes authenticate server-side.
+ * Typed API client for the Express backend in ../wedplan-server.
+ *
+ * That server authenticates with a JWT from Better Auth, not with the
+ * httpOnly session cookie. getClientToken() reads the short-lived JWT and we
+ * send it as `Authorization: Bearer <token>`. Requests still include
+ * credentials so the Next.js /api/upload route (ImgBB) keeps working.
  */
+
+import { getClientToken } from "@/lib/getClientToken";
+import type { Booking, Service, Transaction, User } from "@/types";
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(
+  /\/$/,
+  "",
+);
+
+/** Routes handled by this Next.js app rather than by the Express server. */
+const LOCAL_PATHS = ["/api/upload"];
+
+function isLocal(path: string): boolean {
+  return LOCAL_PATHS.some((prefix) => path.startsWith(prefix));
+}
+
+function fullUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return isLocal(path) ? path : `${API_BASE}${path}`;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -16,15 +40,21 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const headers = new Headers(init?.headers);
+
+  if (init?.body && !(init.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (!isLocal(path)) {
+    const authorization = await getClientToken();
+    if (authorization) headers.set("Authorization", authorization);
+  }
+
+  const res = await fetch(fullUrl(path), {
     ...init,
+    headers,
     credentials: "include",
-    headers: {
-      ...(init?.body && !(init.body instanceof FormData)
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...init?.headers,
-    },
   });
 
   let data: unknown = null;
@@ -41,6 +71,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
         : "Request failed. Please try again.";
     throw new ApiError(res.status, message);
   }
+
   return data as T;
 }
 
@@ -53,38 +84,26 @@ function qs(params: Record<string, string | number | boolean | undefined | null>
   return s ? `?${s}` : "";
 }
 
-// ── Types shared with the API ──────────────────────────────────────────────
-import type { Booking, Service, Transaction, User } from "@/types";
+// ---------------------------------------------------------------- Types
 
 export type ServiceWithVendor = Service & { vendor?: User };
 export type BookingWithDetails = Booking & { service?: Service; vendor?: User; customer?: User };
 export type TransactionWithVendor = Transaction & { vendor?: User };
+export type AdminUser = User & { serviceCount: number; bookingCount: number; requestCount: number };
 
-export interface AuthConfig {
-  googleEnabled: boolean;
-  stripeEnabled: boolean;
-  imgbbEnabled: boolean;
+export interface SubscriptionStatus {
+  success: boolean;
+  activated: boolean;
+  plan: "free" | "premium";
+  subscriptionExpiresAt: string | null;
+  transaction: TransactionWithVendor;
 }
 
-export const api = {
-  // auth
-  config: () => request<AuthConfig>("/api/auth/config"),
-  session: () => request<{ user: User | null }>("/api/auth/session"),
-  signIn: (email: string, password: string, remember = true) =>
-    request<{ user: User }>("/api/auth/sign-in", {
-      method: "POST",
-      body: JSON.stringify({ email, password, remember }),
-    }),
-  signUp: (input: Record<string, unknown>) =>
-    request<{ user: User }>("/api/auth/sign-up", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
-  signOut: () => request<{ ok: true }>("/api/auth/sign-out", { method: "POST" }),
-  googleDemo: () => request<{ user: User }>("/api/auth/google-demo", { method: "POST" }),
+// ---------------------------------------------------------------- Client
 
+export const api = {
   // public services
-  services: (filters: { q?: string; category?: string; location?: string; sort?: string; featured?: boolean; limit?: number } = {}) =>
+  services: (filters: { q?: string; category?: string; location?: string; sort?: string; limit?: number } = {}) =>
     request<{ services: ServiceWithVendor[]; total: number; locations: string[] }>(`/api/services${qs(filters)}`),
   service: (id: string) => request<{ service: ServiceWithVendor }>(`/api/services/${id}`),
   vendors: () => request<{ vendors: (User & { activeServiceCount: number })[] }>("/api/vendors"),
@@ -110,13 +129,16 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(input),
     }),
-  deleteService: (id: string) => request<{ ok: true }>(`/api/vendor/services/${id}`, { method: "DELETE" }),
+  deleteService: (id: string) =>
+    request<{ success: true; message: string }>(`/api/vendor/services/${id}`, { method: "DELETE" }),
   setServiceAvailability: (id: string, isAvailable: boolean) =>
     request<{ service: Service }>(`/api/vendor/services/${id}/availability`, {
       method: "PATCH",
       body: JSON.stringify({ isAvailable }),
     }),
-  vendorTransactions: () => request<{ transactions: Transaction[] }>("/api/vendor/transactions"),
+  vendorTransactions: () => request<{ transactions: TransactionWithVendor[] }>("/api/vendor/transactions"),
+  vendorBookings: () =>
+    request<{ bookings: BookingWithDetails[]; total: number }>("/api/vendor/bookings"),
 
   // bookings
   bookings: () => request<{ bookings: BookingWithDetails[] }>("/api/bookings"),
@@ -147,9 +169,7 @@ export const api = {
       totalRevenue: number;
     }>("/api/admin/stats"),
   adminUsers: (filters: { q?: string; role?: string } = {}) =>
-    request<{ users: (User & { serviceCount: number; bookingCount: number; requestCount: number })[] }>(
-      `/api/admin/users${qs(filters)}`,
-    ),
+    request<{ users: AdminUser[] }>(`/api/admin/users${qs(filters)}`),
   adminSetUserBlocked: (id: string, isBlocked: boolean) =>
     request<{ user: User }>(`/api/admin/users/${id}/status`, {
       method: "PATCH",
@@ -157,7 +177,7 @@ export const api = {
     }),
   adminServices: (filters: { q?: string; status?: string; category?: string } = {}) =>
     request<{ services: ServiceWithVendor[] }>(`/api/admin/services${qs(filters)}`),
-  adminSetServiceStatus: (id: string, status: "pending" | "approved" | "rejected") =>
+  adminSetServiceStatus: (id: string, status: "approved" | "rejected") =>
     request<{ service: Service }>(`/api/admin/services/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
@@ -167,43 +187,25 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ isAvailable }),
     }),
-  adminDeleteService: (id: string) => request<{ ok: true }>(`/api/admin/services/${id}`, { method: "DELETE" }),
+  adminDeleteService: (id: string) =>
+    request<{ success: true; message: string }>(`/api/admin/services/${id}`, { method: "DELETE" }),
+  adminBookings: () =>
+    request<{ bookings: BookingWithDetails[]; total: number }>("/api/admin/bookings"),
   adminTransactions: () => request<{ transactions: TransactionWithVendor[] }>("/api/admin/transactions"),
 
   // subscription / payment
   createCheckout: () =>
-    request<{ sessionId: string; url: string; simulated: boolean }>("/api/subscription/checkout", {
+    request<{ sessionId: string; url: string; transactionId: string }>("/api/subscription/checkout", {
       method: "POST",
     }),
-  checkoutInfo: (sessionId: string) =>
-    request<{
-      sessionId: string;
-      plan: string;
-      amount: number;
-      currency: string;
-      vendorName: string;
-      status: string;
-    }>(`/api/payment/checkout-info${qs({ session_id: sessionId })}`),
-  simulatePayment: (sessionId: string) =>
-    request<{ ok: true }>("/api/payment/simulate", {
-      method: "POST",
-      body: JSON.stringify({ sessionId }),
-    }),
-  cancelPayment: (sessionId: string) =>
-    request<{ ok: true }>("/api/payment/cancel", {
-      method: "POST",
-      body: JSON.stringify({ sessionId }),
-    }),
-  verifyPayment: (sessionId: string) =>
-    request<{ status: string; amount: number; currency: string; plan: string; activated: boolean }>(
-      `/api/payment/verify${qs({ session_id: sessionId })}`,
-    ),
+  subscriptionStatus: (sessionId: string) =>
+    request<SubscriptionStatus>(`/api/subscription/status${qs({ session_id: sessionId })}`),
 
   // profile
   updateProfile: (input: Record<string, unknown>) =>
     request<{ user: User }>("/api/profile", { method: "PATCH", body: JSON.stringify(input) }),
 
-  // upload
+  // upload (handled by this Next.js app, not the Express server)
   uploadImage: (file: File) => {
     const form = new FormData();
     form.append("image", file);
