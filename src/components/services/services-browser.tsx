@@ -157,8 +157,10 @@ export function ServicesBrowser() {
     services: ServiceWithVendor[];
     locations: string[];
   } | null>(null);
+  const [loadError, setLoadError] = React.useState(false);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
-  const requestKey = `${debouncedSearch}|${category}|${location}|${sort}`;
+  const requestKey = `${debouncedSearch}|${category}|${location}|${sort}|${reloadKey}`;
 
   React.useEffect(() => {
     let cancelled = false;
@@ -173,6 +175,7 @@ export function ServicesBrowser() {
           limit: 100,
         });
         if (!cancelled) {
+          setLoadError(false);
           setResult({
             key: requestKey,
             services: data.services,
@@ -181,6 +184,7 @@ export function ServicesBrowser() {
         }
       } catch {
         if (!cancelled) {
+          setLoadError(true);
           setResult({ key: requestKey, services: [], locations: [] });
         }
       }
@@ -459,6 +463,16 @@ export function ServicesBrowser() {
             <ServiceCardSkeleton key={i} />
           ))}
         </div>
+      ) : loadError ? (
+        <EmptyState
+          icon={<LayoutGrid aria-hidden />}
+          title="Couldn't load services"
+          description="The marketplace is temporarily unavailable. Please try again."
+          action={{
+            label: "Try Again",
+            onClick: () => setReloadKey((key) => key + 1),
+          }}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<LayoutGrid aria-hidden />}
