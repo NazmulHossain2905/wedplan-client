@@ -13,7 +13,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { Menu, UserPlus, X } from "lucide-react";
+import {
+  type LucideIcon,
+  LayoutDashboard,
+  Menu,
+  UserPlus,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -24,29 +30,54 @@ const NAV_LINKS = [
   { href: "/services", label: "Explore Services" },
 ];
 
+const DASHBOARD_LABELS: Record<string, string> = {
+  vendor: "Vendor Hub",
+  customer: "My Dashboard",
+  admin: "Admin Dashboard",
+};
+
+function isNavActive(pathname: string, href: string) {
+  // Any page inside the dashboard keeps the dashboard link highlighted.
+  if (href.startsWith("/dashboard")) return pathname.startsWith("/dashboard");
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 function NavLink({
   href,
   label,
   onClick,
+  icon: Icon,
 }: {
   href: string;
   label: string;
   onClick?: () => void;
+  icon?: LucideIcon;
 }) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const active = isNavActive(pathname, href);
   return (
     <Link
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         active
-          ? "bg-card pl-5 text-burgundy shadow-sm ring-1 ring-burgundy/10 before:absolute before:left-2.5 before:size-1.5 before:rounded-full before:bg-rose"
+          ? "bg-card text-burgundy shadow-sm ring-1 ring-burgundy/10"
           : "text-foreground/70 hover:bg-card/70 hover:text-burgundy",
       )}
     >
+      {Icon ? (
+        <Icon aria-hidden className="size-3.5 shrink-0" />
+      ) : (
+        <span
+          aria-hidden
+          className={cn(
+            "size-1.5 shrink-0 rounded-full",
+            active ? "bg-rose" : "bg-border/80",
+          )}
+        />
+      )}
       {label}
     </Link>
   );
@@ -56,13 +87,15 @@ function MobileNavLink({
   href,
   label,
   onClick,
+  icon: Icon,
 }: {
   href: string;
   label: string;
   onClick?: () => void;
+  icon?: LucideIcon;
 }) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const active = isNavActive(pathname, href);
   return (
     <Link
       href={href}
@@ -75,13 +108,17 @@ function MobileNavLink({
           : "text-foreground/80 hover:bg-rose-tint hover:text-burgundy",
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "size-1.5 shrink-0 rounded-full",
-          active ? "bg-rose" : "bg-border",
-        )}
-      />
+      {Icon ? (
+        <Icon aria-hidden className="size-4 shrink-0" />
+      ) : (
+        <span
+          aria-hidden
+          className={cn(
+            "size-1.5 shrink-0 rounded-full",
+            active ? "bg-rose" : "bg-border",
+          )}
+        />
+      )}
       {label}
     </Link>
   );
@@ -91,6 +128,12 @@ export function Navbar() {
   const { isAuthenticated, hydrated, user, signOut } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const signedIn = hydrated && isAuthenticated && Boolean(user);
+  const dashboardHref = user ? dashboardHomeForRole(user.role) : "";
+  const dashboardLabel = user
+    ? (DASHBOARD_LABELS[user.role] ?? "Dashboard")
+    : "Dashboard";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
@@ -104,6 +147,19 @@ export function Navbar() {
           {NAV_LINKS.map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
+          {signedIn ? (
+            <>
+              <span
+                aria-hidden
+                className="mx-1 h-5 w-px shrink-0 bg-border/80"
+              />
+              <NavLink
+                href={dashboardHref}
+                label={dashboardLabel}
+                icon={LayoutDashboard}
+              />
+            </>
+          ) : null}
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
@@ -174,10 +230,11 @@ export function Navbar() {
                     onClick={() => setMobileOpen(false)}
                   />
                 ))}
-                {hydrated && isAuthenticated && user ? (
+                {signedIn ? (
                   <MobileNavLink
-                    href={dashboardHomeForRole(user.role)}
-                    label="Dashboard"
+                    href={dashboardHref}
+                    label={dashboardLabel}
+                    icon={LayoutDashboard}
                     onClick={() => setMobileOpen(false)}
                   />
                 ) : null}
