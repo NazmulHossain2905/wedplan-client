@@ -26,7 +26,7 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
   // Wait for the session before deciding: rendering the form while the
   // session is still loading either flashes it for signed-in users or starts
   // a redundant redirect.
-  if (isPending) {
+  if (session === undefined || isPending) {
     return <AuthRedirectSkeleton message="Checking your session…" />;
   }
 

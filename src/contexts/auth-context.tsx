@@ -123,7 +123,10 @@ export function AuthProvider({
     () => ({
       user,
       isAuthenticated: Boolean(user) && !user?.isBlocked,
-      hydrated: !isPending,
+      // `isPending` can briefly be false while `session` is still undefined
+      // right after sign-in/navigation. Acting on that state bounces the user
+      // between Sign In and the dashboard (visible as continuous shaking).
+      hydrated: !isPending && session !== undefined,
       signIn,
       signUp,
       googleSignIn,
