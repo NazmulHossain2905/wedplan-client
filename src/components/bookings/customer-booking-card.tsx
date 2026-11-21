@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
-import { cn } from "@/lib/utils";
 import type { Booking, Service, User } from "@/types";
 import { Ban, CalendarDays, Eye, MapPin } from "lucide-react";
 import { useState } from "react";
@@ -109,24 +108,23 @@ export function CustomerBookingCard({
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-row gap-2 sm:flex-col">
+        <div className="flex w-full shrink-0 flex-row gap-2 sm:w-40 sm:flex-col sm:self-center">
           <Button
-            variant="outline"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="h-10 flex-1 gap-1.5 rounded-full bg-burgundy px-4 font-medium text-white hover:bg-burgundy-deep sm:w-full sm:flex-none"
             onClick={() => setDetailsOpen(true)}
           >
             <Eye aria-hidden className="size-4" /> View Details
           </Button>
           {canCancel ? (
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
-              className={cn("flex-1 gap-1.5")}
+              className="h-10 flex-1 gap-1.5 rounded-full border-red-200 bg-red-50 px-4 font-medium text-red-700 hover:bg-red-100 hover:text-red-800 sm:w-full sm:flex-none"
               onClick={() => setCancelOpen(true)}
               disabled={cancelling}
             >
-              <Ban aria-hidden className="size-4" /> Cancel
+              <Ban aria-hidden className="size-4" /> Cancel Request
             </Button>
           ) : null}
         </div>
