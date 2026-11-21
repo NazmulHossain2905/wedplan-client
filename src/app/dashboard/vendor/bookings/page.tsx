@@ -15,6 +15,7 @@ import {
   CalendarDays,
   CalendarRange,
   Check,
+  Loader2,
   MapPin,
   MessageSquare,
   X,
@@ -96,7 +97,7 @@ function VendorBookings() {
     tab === "all" ? myBookings : myBookings.filter((b) => b.status === tab);
 
   const handleRespond = async () => {
-    if (!responding) return;
+    if (!responding || busyId) return;
     const { booking, action } = responding;
     setBusyId(booking.id);
     try {
@@ -277,7 +278,19 @@ function VendorBookings() {
                           }
                           disabled={busyId === booking.id}
                         >
-                          <Check aria-hidden className="size-3.5" /> Accept
+                          {busyId === booking.id &&
+                          responding?.action === "accepted" ? (
+                            <Loader2
+                              aria-hidden
+                              className="size-3.5 animate-spin"
+                            />
+                          ) : (
+                            <Check aria-hidden className="size-3.5" />
+                          )}{" "}
+                          {busyId === booking.id &&
+                          responding?.action === "accepted"
+                            ? "Accepting…"
+                            : "Accept"}
                         </Button>
                         <Button
                           variant="outline"
@@ -288,7 +301,19 @@ function VendorBookings() {
                           }
                           disabled={busyId === booking.id}
                         >
-                          <X aria-hidden className="size-3.5" /> Reject
+                          {busyId === booking.id &&
+                          responding?.action === "rejected" ? (
+                            <Loader2
+                              aria-hidden
+                              className="size-3.5 animate-spin"
+                            />
+                          ) : (
+                            <X aria-hidden className="size-3.5" />
+                          )}{" "}
+                          {busyId === booking.id &&
+                          responding?.action === "rejected"
+                            ? "Rejecting…"
+                            : "Reject"}
                         </Button>
                       </>
                     ) : null}
@@ -310,7 +335,7 @@ function VendorBookings() {
 
       <ConfirmDialog
         open={Boolean(responding)}
-        onOpenChange={(o) => !o && setResponding(null)}
+        onOpenChange={(o) => !o && !busyId && setResponding(null)}
         title={
           responding?.action === "accepted"
             ? "Accept this booking request?"
@@ -327,6 +352,10 @@ function VendorBookings() {
             : "Reject Booking"
         }
         destructive={responding?.action === "rejected"}
+        loadingLabel={
+          responding?.action === "accepted" ? "Accepting…" : "Rejecting…"
+        }
+        loading={Boolean(responding && busyId === responding.booking.id)}
         onConfirm={() => void handleRespond()}
       />
     </div>

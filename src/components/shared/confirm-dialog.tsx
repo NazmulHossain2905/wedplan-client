@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
@@ -18,8 +19,10 @@ interface ConfirmDialogProps {
   title: string;
   description: React.ReactNode;
   confirmLabel?: string;
+  loadingLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  loading?: boolean;
   onConfirm: () => void;
 }
 
@@ -29,8 +32,10 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Confirm",
+  loadingLabel,
   cancelLabel = "Cancel",
   destructive = false,
+  loading = false,
   onConfirm,
 }: ConfirmDialogProps) {
   return (
@@ -41,18 +46,28 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>
+            {cancelLabel}
+          </AlertDialogCancel>
           <AlertDialogAction
+            disabled={loading}
             onClick={(e) => {
               e.preventDefault();
-              onConfirm();
+              if (!loading) onConfirm();
             }}
             className={cn(
               destructive &&
                 "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20",
             )}
           >
-            {confirmLabel}
+            {loading ? (
+              <>
+                <Loader2 aria-hidden className="size-4 animate-spin" />
+                {loadingLabel ?? confirmLabel}
+              </>
+            ) : (
+              confirmLabel
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

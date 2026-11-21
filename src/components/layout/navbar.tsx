@@ -16,6 +16,7 @@ import { dashboardHomeForRole } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import {
   type LucideIcon,
+  Loader2,
   LayoutDashboard,
   Menu,
   UserPlus,
@@ -129,6 +130,7 @@ export function Navbar() {
   const { isAuthenticated, hydrated, user, signOut } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const signedIn = hydrated && isAuthenticated && Boolean(user);
   const dashboardHref = user ? dashboardHomeForRole(user.role) : "";
@@ -261,14 +263,29 @@ export function Navbar() {
                     <Button
                       variant="destructive"
                       className="w-full rounded-full"
+                      disabled={loggingOut}
                       onClick={() => {
-                        void signOut();
-                        setMobileOpen(false);
-                        toast.success("You have been signed out.");
-                        router.push("/");
+                        if (loggingOut) return;
+                        setLoggingOut(true);
+                        void (async () => {
+                          await signOut();
+                          setMobileOpen(false);
+                          toast.success("You have been signed out.");
+                          router.push("/");
+                        })();
                       }}
                     >
-                      Logout
+                      {loggingOut ? (
+                        <>
+                          <Loader2
+                            aria-hidden
+                            className="size-4 animate-spin"
+                          />
+                          Signing out…
+                        </>
+                      ) : (
+                        "Logout"
+                      )}
                     </Button>
                   </>
                 ) : (

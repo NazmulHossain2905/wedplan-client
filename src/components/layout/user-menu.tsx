@@ -13,13 +13,15 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { initials } from "@/lib/helpers";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, Loader2, LogOut, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
 
   if (!user) return null;
 
@@ -78,7 +80,10 @@ export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
+          disabled={signingOut}
           onClick={() => {
+            if (signingOut) return;
+            setSigningOut(true);
             void (async () => {
               await signOut();
               onNavigate?.();
@@ -87,8 +92,12 @@ export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
             })();
           }}
         >
-          <LogOut aria-hidden className="size-4" />
-          Logout
+          {signingOut ? (
+            <Loader2 aria-hidden className="size-4 animate-spin" />
+          ) : (
+            <LogOut aria-hidden className="size-4" />
+          )}
+          {signingOut ? "Signing out…" : "Logout"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

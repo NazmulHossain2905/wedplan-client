@@ -32,6 +32,7 @@ import type { Service } from "@/types";
 import {
   CheckCircle2,
   FolderOpen,
+  Loader2,
   Search,
   Trash2,
   XCircle,
@@ -56,6 +57,7 @@ function AdminServices() {
   const [viewing, setViewing] = useState<ServiceWithVendor | null>(null);
   const [rejecting, setRejecting] = useState<ServiceWithVendor | null>(null);
   const [deleting, setDeleting] = useState<ServiceWithVendor | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const [result, setResult] = useState<{
     key: string;
@@ -118,6 +120,8 @@ function AdminServices() {
   };
 
   const handleApprove = async (service: Service) => {
+    if (busyId) return;
+    setBusyId(service.id);
     try {
       await api.adminSetServiceStatus(service.id, "approved");
       toast.success(
@@ -130,12 +134,15 @@ function AdminServices() {
           ? error.message
           : "Could not approve this service.",
       );
+    } finally {
+      setBusyId(null);
     }
   };
 
   const handleRejectConfirm = async () => {
-    if (!rejecting) return;
+    if (!rejecting || busyId) return;
     const name = rejecting.serviceName;
+    setBusyId(rejecting.id);
     try {
       await api.adminSetServiceStatus(rejecting.id, "rejected");
       setRejecting(null);
@@ -147,10 +154,14 @@ function AdminServices() {
           ? error.message
           : "Could not reject this service.",
       );
+    } finally {
+      setBusyId(null);
     }
   };
 
   const handleToggleAvailability = async (service: Service, next: boolean) => {
+    if (busyId) return;
+    setBusyId(service.id);
     try {
       await api.adminSetServiceAvailability(service.id, next);
       toast.success(
@@ -165,12 +176,15 @@ function AdminServices() {
           ? error.message
           : "Could not update availability.",
       );
+    } finally {
+      setBusyId(null);
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleting) return;
+    if (!deleting || busyId) return;
     const name = deleting.serviceName;
+    setBusyId(deleting.id);
     try {
       await api.adminDeleteService(deleting.id);
       setDeleting(null);
@@ -184,6 +198,8 @@ function AdminServices() {
           ? error.message
           : "Could not delete this service.",
       );
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -313,13 +329,25 @@ function AdminServices() {
                     <label className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Switch
                         checked={service.isAvailable}
-                        disabled={service.status !== "approved"}
+                        disabled={
+                          service.status !== "approved" || busyId === service.id
+                        }
                         onCheckedChange={(v) =>
                           void handleToggleAvailability(service, v)
                         }
                         aria-label={`Toggle availability for ${service.serviceName}`}
                       />
-                      <AvailabilityBadge available={service.isAvailable} />
+                      {busyId === service.id ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <Loader2
+                            aria-hidden
+                            className="size-3.5 animate-spin"
+                          />
+                          Updating…
+                        </span>
+                      ) : (
+                        <AvailabilityBadge available={service.isAvailable} />
+                      )}
                     </label>
                     <span className="text-xs text-muted-foreground">
                       {formatDate(service.createdAt)}
@@ -340,10 +368,18 @@ function AdminServices() {
                         <Button
                           size="sm"
                           className="flex-1 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                          disabled={busyId === service.id}
                           onClick={() => void handleApprove(service)}
                         >
-                          <CheckCircle2 aria-hidden className="size-3.5" />{" "}
-                          Approve
+                          {busyId === service.id ? (
+                            <Loader2
+                              aria-hidden
+                              className="size-3.5 animate-spin"
+                            />
+                          ) : (
+                            <CheckCircle2 aria-hidden className="size-3.5" />
+                          )}{" "}
+                          {busyId === service.id ? "Approving…" : "Approve"}
                         </Button>
                         <Button
                           size="sm"
@@ -359,10 +395,18 @@ function AdminServices() {
                         size="sm"
                         variant="outline"
                         className="flex-1 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        disabled={busyId === service.id}
                         onClick={() => void handleApprove(service)}
                       >
-                        <CheckCircle2 aria-hidden className="size-3.5" />{" "}
-                        Approve
+                        {busyId === service.id ? (
+                          <Loader2
+                            aria-hidden
+                            className="size-3.5 animate-spin"
+                          />
+                        ) : (
+                          <CheckCircle2 aria-hidden className="size-3.5" />
+                        )}{" "}
+                        {busyId === service.id ? "Approving…" : "Approve"}
                       </Button>
                     ) : null}
                     <Button
@@ -465,13 +509,28 @@ function AdminServices() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={service.isAvailable}
-                            disabled={service.status !== "approved"}
+                            disabled={
+                              service.status !== "approved" ||
+                              busyId === service.id
+                            }
                             onCheckedChange={(v) =>
                               void handleToggleAvailability(service, v)
                             }
                             aria-label={`Toggle availability for ${service.serviceName}`}
                           />
-                          <AvailabilityBadge available={service.isAvailable} />
+                          {busyId === service.id ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                              <Loader2
+                                aria-hidden
+                                className="size-3.5 animate-spin"
+                              />
+                              Updating…
+                            </span>
+                          ) : (
+                            <AvailabilityBadge
+                              available={service.isAvailable}
+                            />
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -488,13 +547,23 @@ function AdminServices() {
                               <Button
                                 size="sm"
                                 className="h-8 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                                disabled={busyId === service.id}
                                 onClick={() => void handleApprove(service)}
                               >
-                                <CheckCircle2
-                                  aria-hidden
-                                  className="size-3.5"
-                                />{" "}
-                                Approve
+                                {busyId === service.id ? (
+                                  <Loader2
+                                    aria-hidden
+                                    className="size-3.5 animate-spin"
+                                  />
+                                ) : (
+                                  <CheckCircle2
+                                    aria-hidden
+                                    className="size-3.5"
+                                  />
+                                )}{" "}
+                                {busyId === service.id
+                                  ? "Approving…"
+                                  : "Approve"}
                               </Button>
                               <Button
                                 size="sm"
@@ -511,11 +580,22 @@ function AdminServices() {
                               size="sm"
                               variant="outline"
                               className="h-8 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                              disabled={busyId === service.id}
                               onClick={() => void handleApprove(service)}
                               title="Re-approve this service"
                             >
-                              <CheckCircle2 aria-hidden className="size-3.5" />{" "}
-                              Approve
+                              {busyId === service.id ? (
+                                <Loader2
+                                  aria-hidden
+                                  className="size-3.5 animate-spin"
+                                />
+                              ) : (
+                                <CheckCircle2
+                                  aria-hidden
+                                  className="size-3.5"
+                                />
+                              )}{" "}
+                              {busyId === service.id ? "Approving…" : "Approve"}
                             </Button>
                           ) : null}
                           <Button
@@ -599,10 +679,12 @@ function AdminServices() {
       {/* Reject confirm */}
       <ConfirmDialog
         open={Boolean(rejecting)}
-        onOpenChange={(o) => !o && setRejecting(null)}
+        onOpenChange={(o) => !o && !busyId && setRejecting(null)}
         title={`Reject "${rejecting?.serviceName}"?`}
         description="The vendor will keep the service in their dashboard with a Rejected status, but it will be hidden from customers. Inappropriate services can be deleted instead."
         confirmLabel="Reject Service"
+        loadingLabel="Rejecting…"
+        loading={Boolean(rejecting && busyId === rejecting.id)}
         destructive
         onConfirm={() => void handleRejectConfirm()}
       />
@@ -610,10 +692,12 @@ function AdminServices() {
       {/* Delete confirm */}
       <ConfirmDialog
         open={Boolean(deleting)}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={(o) => !o && !busyId && setDeleting(null)}
         title={`Delete "${deleting?.serviceName}"?`}
         description="The service and its booking requests will be permanently removed from the platform. This cannot be undone."
         confirmLabel="Delete Permanently"
+        loadingLabel="Deleting…"
+        loading={Boolean(deleting && busyId === deleting.id)}
         destructive
         onConfirm={() => void handleDeleteConfirm()}
       />

@@ -50,6 +50,7 @@ function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewing, setViewing] = useState<AdminUser | null>(null);
   const [blocking, setBlocking] = useState<AdminUser | null>(null);
+  const [blockingBusy, setBlockingBusy] = useState(false);
 
   const [result, setResult] = useState<{
     key: string;
@@ -102,9 +103,10 @@ function AdminUsers() {
   );
 
   const handleToggleBlock = async () => {
-    if (!blocking) return;
+    if (!blocking || blockingBusy) return;
     const isBlock = !blocking.isBlocked;
     const name = blocking.name;
+    setBlockingBusy(true);
     try {
       await api.adminSetUserBlocked(blocking.id, isBlock);
       setBlocking(null);
@@ -125,6 +127,8 @@ function AdminUsers() {
           ? error.message
           : "Could not update this user.",
       );
+    } finally {
+      setBlockingBusy(false);
     }
   };
 
@@ -544,7 +548,7 @@ function AdminUsers() {
 
       <ConfirmDialog
         open={Boolean(blocking)}
-        onOpenChange={(o) => !o && setBlocking(null)}
+        onOpenChange={(o) => !o && !blockingBusy && setBlocking(null)}
         title={
           blocking?.isBlocked
             ? `Unblock ${blocking?.name}?`
@@ -556,6 +560,8 @@ function AdminUsers() {
             : "Blocked users cannot sign in or access protected platform features. If they are currently signed in, they will be signed out automatically. You can unblock them anytime."
         }
         confirmLabel={blocking?.isBlocked ? "Unblock User" : "Block User"}
+        loadingLabel={blocking?.isBlocked ? "Unblocking…" : "Blocking…"}
+        loading={blockingBusy}
         destructive={!blocking?.isBlocked}
         onConfirm={() => void handleToggleBlock()}
       />

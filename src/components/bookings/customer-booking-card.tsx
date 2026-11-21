@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { formatBDT, formatDate, initials } from "@/lib/helpers";
 import type { Booking, Service, User } from "@/types";
-import { Ban, CalendarDays, Eye, MapPin } from "lucide-react";
+import { Ban, CalendarDays, Eye, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -124,7 +124,12 @@ export function CustomerBookingCard({
               onClick={() => setCancelOpen(true)}
               disabled={cancelling}
             >
-              <Ban aria-hidden className="size-4" /> Cancel Request
+              {cancelling ? (
+                <Loader2 aria-hidden className="size-4 animate-spin" />
+              ) : (
+                <Ban aria-hidden className="size-4" />
+              )}
+              {cancelling ? "Cancelling…" : "Cancel Request"}
             </Button>
           ) : null}
         </div>
@@ -140,10 +145,12 @@ export function CustomerBookingCard({
 
       <ConfirmDialog
         open={cancelOpen}
-        onOpenChange={setCancelOpen}
+        onOpenChange={(o) => !o && !cancelling && setCancelOpen(false)}
         title="Cancel this booking request?"
         description={`Your request for ${service?.serviceName ?? "this service"} on ${formatDate(booking.eventDate)} will be withdrawn. This cannot be undone.`}
         confirmLabel="Cancel Booking"
+        loadingLabel="Cancelling…"
+        loading={cancelling}
         destructive
         onConfirm={() => void handleCancel()}
       />

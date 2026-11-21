@@ -35,6 +35,7 @@ import {
   CheckCircle2,
   FolderOpen,
   Hourglass,
+  Loader2,
   ShieldCheck,
   Store,
   Users,
@@ -90,6 +91,7 @@ function AdminOverview() {
   const [transactions, setTransactions] = useState<TransactionWithVendor[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [busyServiceId, setBusyServiceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role !== "admin") return;
@@ -234,6 +236,8 @@ function AdminOverview() {
     serviceId: string,
     status: "approved" | "rejected",
   ) => {
+    if (busyServiceId) return;
+    setBusyServiceId(serviceId);
     try {
       await api.adminSetServiceStatus(serviceId, status);
       toast.success(
@@ -248,6 +252,8 @@ function AdminOverview() {
           ? error.message
           : "Could not update the service.",
       );
+    } finally {
+      setBusyServiceId(null);
     }
   };
 
@@ -571,22 +577,39 @@ function AdminOverview() {
                       <Button
                         size="sm"
                         className="h-8 flex-1 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                        disabled={busyServiceId === service.id}
                         onClick={() =>
                           void handleQuickApprove(service.id, "approved")
                         }
                       >
-                        <CheckCircle2 aria-hidden className="size-3.5" />{" "}
-                        Approve
+                        {busyServiceId === service.id ? (
+                          <Loader2
+                            aria-hidden
+                            className="size-3.5 animate-spin"
+                          />
+                        ) : (
+                          <CheckCircle2 aria-hidden className="size-3.5" />
+                        )}{" "}
+                        {busyServiceId === service.id
+                          ? "Approving…"
+                          : "Approve"}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-8 flex-1 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                        disabled={busyServiceId === service.id}
                         onClick={() =>
                           void handleQuickApprove(service.id, "rejected")
                         }
                       >
-                        Reject
+                        {busyServiceId === service.id ? (
+                          <Loader2
+                            aria-hidden
+                            className="size-3.5 animate-spin"
+                          />
+                        ) : null}
+                        {busyServiceId === service.id ? "Rejecting…" : "Reject"}
                       </Button>
                     </div>
                   </div>

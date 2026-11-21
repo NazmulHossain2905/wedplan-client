@@ -156,8 +156,9 @@ function VendorServices() {
   };
 
   const handleDelete = async () => {
-    if (!deleting) return;
+    if (!deleting || busyId) return;
     const name = deleting.serviceName;
+    setBusyId(deleting.id);
     try {
       await api.deleteService(deleting.id);
       setDeleting(null);
@@ -171,6 +172,8 @@ function VendorServices() {
           ? error.message
           : "Could not delete the service.",
       );
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -436,10 +439,12 @@ function VendorServices() {
       {/* Delete confirm */}
       <ConfirmDialog
         open={Boolean(deleting)}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={(o) => !o && !busyId && setDeleting(null)}
         title="Delete this service?"
         description={`"${deleting?.serviceName}" will be permanently removed along with its booking requests. This cannot be undone.`}
         confirmLabel="Delete Service"
+        loadingLabel="Deleting…"
+        loading={Boolean(deleting && busyId === deleting.id)}
         destructive
         onConfirm={() => void handleDelete()}
       />
