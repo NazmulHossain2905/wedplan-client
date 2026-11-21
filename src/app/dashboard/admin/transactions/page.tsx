@@ -201,91 +201,157 @@ function AdminTransactions() {
           description="Try a different search term or filter. New payments appear here after verified Stripe webhooks."
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
-          <table className="w-full min-w-[880px] text-sm">
-            <caption className="sr-only">Subscription transactions</caption>
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Vendor
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Business Name
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Plan
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Amount
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Date
-                </th>
-                <th scope="col" className="px-4 py-3.5 text-right font-medium">
-                  Details
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((t) => {
-                const vendor = t.vendor;
-                return (
-                  <tr
-                    key={t.id}
-                    className="border-b border-border/60 last:border-0"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className="size-8 border border-border">
-                          <AvatarImage
-                            src={vendor?.image}
-                            alt={vendor?.name ?? "Vendor"}
-                          />
-                          <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">
-                            {initials(vendor?.name ?? "V")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">
-                          {vendor?.name ?? "Unknown vendor"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {vendor?.businessName ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-gradient-to-r from-[#8a6d2f] to-[#c9a227] px-2.5 py-0.5 text-xs font-semibold capitalize text-white">
-                        {t.plan}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 font-medium">
+        <>
+          {/* Mobile: stacked cards */}
+          <div className="space-y-3 md:hidden">
+            {filtered.map((t) => {
+              const vendor = t.vendor;
+              return (
+                <article
+                  key={t.id}
+                  className="rounded-xl border border-border bg-card p-4 shadow-xs"
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="size-10 shrink-0 border border-border">
+                      <AvatarImage
+                        src={vendor?.image}
+                        alt={vendor?.name ?? "Vendor"}
+                      />
+                      <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
+                        {initials(vendor?.name ?? "V")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">
+                        {vendor?.name ?? "Unknown vendor"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {vendor?.businessName ?? "—"}
+                      </p>
+                    </div>
+                    <PaymentStatusBadge
+                      status={t.paymentStatus}
+                      className="shrink-0"
+                    />
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="rounded-full bg-gradient-to-r from-[#8a6d2f] to-[#c9a227] px-2.5 py-0.5 text-xs font-semibold capitalize text-white">
+                      {t.plan}
+                    </span>
+                    <span className="text-sm font-medium">
                       {formatBDT(t.amount)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <PaymentStatusBadge status={t.paymentStatus} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+                    <span className="text-xs text-muted-foreground">
                       {formatDate(t.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => setViewing(t)}
-                      >
-                        <Eye aria-hidden className="size-3.5" /> View
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setViewing(t)}
+                    >
+                      <Eye aria-hidden className="size-3.5" /> View
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden overflow-x-auto rounded-xl border border-border bg-card shadow-xs md:block">
+            <table className="w-full min-w-[880px] text-sm">
+              <caption className="sr-only">Subscription transactions</caption>
+              <thead>
+                <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Vendor
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Business Name
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Plan
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Amount
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Date
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-right font-medium"
+                  >
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((t) => {
+                  const vendor = t.vendor;
+                  return (
+                    <tr
+                      key={t.id}
+                      className="border-b border-border/60 last:border-0"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="size-8 border border-border">
+                            <AvatarImage
+                              src={vendor?.image}
+                              alt={vendor?.name ?? "Vendor"}
+                            />
+                            <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">
+                              {initials(vendor?.name ?? "V")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">
+                            {vendor?.name ?? "Unknown vendor"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {vendor?.businessName ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full bg-gradient-to-r from-[#8a6d2f] to-[#c9a227] px-2.5 py-0.5 text-xs font-semibold capitalize text-white">
+                          {t.plan}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 font-medium">
+                        {formatBDT(t.amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PaymentStatusBadge status={t.paymentStatus} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                        {formatDate(t.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => setViewing(t)}
+                        >
+                          <Eye aria-hidden className="size-3.5" /> View
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

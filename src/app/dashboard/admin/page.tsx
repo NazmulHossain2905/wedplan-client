@@ -217,6 +217,13 @@ function AdminOverview() {
     )
     .slice(0, 4);
 
+  const recentBookingActivity = [...bookings]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .slice(0, 5);
+
   const handleQuickApprove = async (
     serviceId: string,
     status: "approved" | "rejected",
@@ -621,7 +628,37 @@ function AdminOverview() {
         <h2 className="font-serif text-xl font-semibold text-foreground">
           Latest Booking Activity
         </h2>
-        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
+        {/* Mobile: stacked cards */}
+        <div className="space-y-3 md:hidden">
+          {recentBookingActivity.map((b) => {
+            const customer = b.customer;
+            const service = b.service;
+            return (
+              <div
+                key={b.id}
+                className="rounded-xl border border-border bg-card p-4 shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">
+                      {customer?.name ?? "—"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {service?.serviceName ?? "—"}
+                    </p>
+                  </div>
+                  <BookingStatusBadge status={b.status} className="shrink-0" />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Event {formatDate(b.eventDate)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: table */}
+        <div className="hidden overflow-x-auto rounded-xl border border-border bg-card shadow-xs md:block">
           <table className="w-full min-w-[560px] text-sm">
             <caption className="sr-only">
               Latest booking requests across the platform
@@ -643,32 +680,25 @@ function AdminOverview() {
               </tr>
             </thead>
             <tbody>
-              {[...bookings]
-                .sort(
-                  (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime(),
-                )
-                .slice(0, 5)
-                .map((b) => {
-                  const customer = b.customer;
-                  const service = b.service;
-                  return (
-                    <tr
-                      key={b.id}
-                      className="border-b border-border/60 last:border-0"
-                    >
-                      <td className="px-4 py-3">{customer?.name ?? "—"}</td>
-                      <td className="max-w-52 truncate px-4 py-3">
-                        {service?.serviceName ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">{formatDate(b.eventDate)}</td>
-                      <td className="px-4 py-3">
-                        <BookingStatusBadge status={b.status} />
-                      </td>
-                    </tr>
-                  );
-                })}
+              {recentBookingActivity.map((b) => {
+                const customer = b.customer;
+                const service = b.service;
+                return (
+                  <tr
+                    key={b.id}
+                    className="border-b border-border/60 last:border-0"
+                  >
+                    <td className="px-4 py-3">{customer?.name ?? "—"}</td>
+                    <td className="max-w-52 truncate px-4 py-3">
+                      {service?.serviceName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">{formatDate(b.eventDate)}</td>
+                    <td className="px-4 py-3">
+                      <BookingStatusBadge status={b.status} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

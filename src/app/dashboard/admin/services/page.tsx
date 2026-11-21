@@ -65,8 +65,7 @@ function AdminServices() {
 
   const searchParam = search.trim() || undefined;
   const statusParam = statusFilter !== "all" ? statusFilter : undefined;
-  const categoryParam =
-    categoryFilter !== "all" ? categoryFilter : undefined;
+  const categoryParam = categoryFilter !== "all" ? categoryFilter : undefined;
   const requestKey = `${searchParam ?? ""}|${statusParam ?? ""}|${categoryParam ?? ""}|${reloadKey}`;
 
   useEffect(() => {
@@ -275,154 +274,268 @@ function AdminServices() {
           description="Try a different search term or filter combination."
         />
       ) : (
-        <div
-          className={`overflow-x-auto rounded-xl border border-border bg-card shadow-xs transition-opacity ${
-            isFetching ? "opacity-60" : "opacity-100"
-          }`}
-          aria-busy={isFetching}
-        >
-          <table className="w-full min-w-250 text-sm">
-            <caption className="sr-only">All submitted services</caption>
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Service
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Vendor
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Category
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Price
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Visible
-                </th>
-                <th scope="col" className="px-4 py-3.5 text-right font-medium">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((service) => {
-                const vendor = service.vendor;
-                const publiclyVisible =
-                  service.status === "approved" && service.isAvailable;
-                return (
-                  <tr
-                    key={service.id}
-                    className={
-                      publiclyVisible
-                        ? "border-b border-border/60 last:border-0"
-                        : "border-b border-border/60 bg-muted/20 last:border-0"
-                    }
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={service.images[0]}
-                          alt=""
-                          loading="lazy"
-                          className="size-10 shrink-0 rounded-md border border-border object-cover"
-                        />
-                        <div className="min-w-0">
-                          <p className="max-w-44 truncate font-medium">
-                            {service.serviceName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(service.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="max-w-40 truncate px-4 py-3 text-muted-foreground">
-                      {vendor?.businessName ?? vendor?.name ?? "—"}
-                    </td>
-                    <td className="max-w-40 truncate px-4 py-3 text-muted-foreground">
-                      {service.category}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-burgundy">
-                      {formatBDT(service.price)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <ServiceStatusBadge status={service.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={service.isAvailable}
-                          disabled={service.status !== "approved"}
-                          onCheckedChange={(v) =>
-                            void handleToggleAvailability(service, v)
-                          }
-                          aria-label={`Toggle availability for ${service.serviceName}`}
-                        />
-                        <AvailabilityBadge available={service.isAvailable} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1.5">
+        <>
+          {/* Mobile: stacked cards */}
+          <div
+            className={`space-y-3 md:hidden ${isFetching ? "opacity-60" : ""}`}
+            aria-busy={isFetching}
+          >
+            {filtered.map((service) => {
+              const vendor = service.vendor;
+              return (
+                <article
+                  key={service.id}
+                  className="rounded-xl border border-border bg-card p-4 shadow-xs"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={service.images[0]}
+                      alt=""
+                      loading="lazy"
+                      className="size-14 shrink-0 rounded-lg border border-border object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">
+                        {service.serviceName}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {vendor?.businessName ?? vendor?.name ?? "—"} ·{" "}
+                        {service.category}
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-burgundy">
+                        {formatBDT(service.price)}
+                      </p>
+                    </div>
+                    <ServiceStatusBadge status={service.status} />
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Switch
+                        checked={service.isAvailable}
+                        disabled={service.status !== "approved"}
+                        onCheckedChange={(v) =>
+                          void handleToggleAvailability(service, v)
+                        }
+                        aria-label={`Toggle availability for ${service.serviceName}`}
+                      />
+                      <AvailabilityBadge available={service.isAvailable} />
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(service.createdAt)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setViewing(service)}
+                    >
+                      View
+                    </Button>
+                    {service.status === "pending" ? (
+                      <>
                         <Button
-                          variant="ghost"
                           size="sm"
-                          onClick={() => setViewing(service)}
+                          className="flex-1 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                          onClick={() => void handleApprove(service)}
                         >
-                          View
+                          <CheckCircle2 aria-hidden className="size-3.5" />{" "}
+                          Approve
                         </Button>
-                        {service.status === "pending" ? (
-                          <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                          onClick={() => setRejecting(service)}
+                        >
+                          <XCircle aria-hidden className="size-3.5" /> Reject
+                        </Button>
+                      </>
+                    ) : service.status === "rejected" ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => void handleApprove(service)}
+                      >
+                        <CheckCircle2 aria-hidden className="size-3.5" />{" "}
+                        Approve
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 border-red-200 text-red-700 hover:bg-red-50"
+                      onClick={() => setDeleting(service)}
+                      aria-label={`Delete ${service.serviceName}`}
+                    >
+                      <Trash2 aria-hidden className="size-3.5" />
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Desktop: table */}
+          <div
+            className={`hidden overflow-x-auto rounded-xl border border-border bg-card shadow-xs transition-opacity md:block ${
+              isFetching ? "opacity-60" : "opacity-100"
+            }`}
+            aria-busy={isFetching}
+          >
+            <table className="w-full min-w-250 text-sm">
+              <caption className="sr-only">All submitted services</caption>
+              <thead>
+                <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Service
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Vendor
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Category
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Price
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Visible
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-right font-medium"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((service) => {
+                  const vendor = service.vendor;
+                  const publiclyVisible =
+                    service.status === "approved" && service.isAvailable;
+                  return (
+                    <tr
+                      key={service.id}
+                      className={
+                        publiclyVisible
+                          ? "border-b border-border/60 last:border-0"
+                          : "border-b border-border/60 bg-muted/20 last:border-0"
+                      }
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={service.images[0]}
+                            alt=""
+                            loading="lazy"
+                            className="size-10 shrink-0 rounded-md border border-border object-cover"
+                          />
+                          <div className="min-w-0">
+                            <p className="max-w-44 truncate font-medium">
+                              {service.serviceName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(service.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="max-w-40 truncate px-4 py-3 text-muted-foreground">
+                        {vendor?.businessName ?? vendor?.name ?? "—"}
+                      </td>
+                      <td className="max-w-40 truncate px-4 py-3 text-muted-foreground">
+                        {service.category}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-burgundy">
+                        {formatBDT(service.price)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <ServiceStatusBadge status={service.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={service.isAvailable}
+                            disabled={service.status !== "approved"}
+                            onCheckedChange={(v) =>
+                              void handleToggleAvailability(service, v)
+                            }
+                            aria-label={`Toggle availability for ${service.serviceName}`}
+                          />
+                          <AvailabilityBadge available={service.isAvailable} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewing(service)}
+                          >
+                            View
+                          </Button>
+                          {service.status === "pending" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                className="h-8 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                                onClick={() => void handleApprove(service)}
+                              >
+                                <CheckCircle2
+                                  aria-hidden
+                                  className="size-3.5"
+                                />{" "}
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                                onClick={() => setRejecting(service)}
+                              >
+                                <XCircle aria-hidden className="size-3.5" />{" "}
+                                Reject
+                              </Button>
+                            </>
+                          ) : service.status === "rejected" ? (
                             <Button
                               size="sm"
-                              className="h-8 gap-1 bg-emerald-700 text-white hover:bg-emerald-700/90"
+                              variant="outline"
+                              className="h-8 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                               onClick={() => void handleApprove(service)}
+                              title="Re-approve this service"
                             >
                               <CheckCircle2 aria-hidden className="size-3.5" />{" "}
                               Approve
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 gap-1 border-red-200 text-red-700 hover:bg-red-50"
-                              onClick={() => setRejecting(service)}
-                            >
-                              <XCircle aria-hidden className="size-3.5" />{" "}
-                              Reject
-                            </Button>
-                          </>
-                        ) : service.status === "rejected" ? (
+                          ) : null}
                           <Button
-                            size="sm"
                             variant="outline"
-                            className="h-8 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                            onClick={() => void handleApprove(service)}
-                            title="Re-approve this service"
+                            size="icon"
+                            className="size-8 border-red-200 text-red-700 hover:bg-red-50"
+                            onClick={() => setDeleting(service)}
+                            aria-label={`Delete ${service.serviceName}`}
                           >
-                            <CheckCircle2 aria-hidden className="size-3.5" />{" "}
-                            Approve
+                            <Trash2 aria-hidden className="size-3.5" />
                           </Button>
-                        ) : null}
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-8 border-red-200 text-red-700 hover:bg-red-50"
-                          onClick={() => setDeleting(service)}
-                          aria-label={`Delete ${service.serviceName}`}
-                        >
-                          <Trash2 aria-hidden className="size-3.5" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* View dialog */}

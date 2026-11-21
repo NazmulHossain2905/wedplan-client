@@ -202,123 +202,215 @@ function AdminUsers() {
           description="Try a different search term, role, or status filter."
         />
       ) : (
-        <div
-          className={`overflow-x-auto rounded-xl border border-border bg-card shadow-xs transition-opacity ${
-            isFetching ? "opacity-60" : "opacity-100"
-          }`}
-          aria-busy={isFetching}
-        >
-          <table className="w-full min-w-[900px] text-sm">
-            <caption className="sr-only">All registered users</caption>
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  User
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Email
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Role
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Business Name
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3.5 font-medium">
-                  Joined
-                </th>
-                <th scope="col" className="px-4 py-3.5 text-right font-medium">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((user) => (
-                <tr
-                  key={user.id}
-                  className={
-                    user.isBlocked
-                      ? "border-b border-border/60 bg-red-50/40 last:border-0"
-                      : "border-b border-border/60 last:border-0"
-                  }
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="size-8 border border-border">
-                        <AvatarImage src={user.image} alt={user.name} />
-                        <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">
-                          {initials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-foreground">
-                        {user.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="max-w-52 truncate px-4 py-3 text-muted-foreground">
-                    {user.email}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RoleBadge role={user.role} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {user.role === "vendor" ? (user.businessName ?? "—") : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <UserStatusBadge blocked={user.isBlocked} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(user.joinedAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1.5">
+        <>
+          {/* Mobile: stacked cards (the table is too wide for phones) */}
+          <div
+            className={`space-y-3 md:hidden ${isFetching ? "opacity-60" : ""}`}
+            aria-busy={isFetching}
+          >
+            {filtered.map((u) => (
+              <article
+                key={u.id}
+                className={`rounded-xl border border-border bg-card p-4 shadow-xs ${
+                  u.isBlocked ? "bg-red-50/40" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="size-10 shrink-0 border border-border">
+                    <AvatarImage src={u.image} alt={u.name} />
+                    <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
+                      {initials(u.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-foreground">
+                      {u.name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {u.email}
+                    </p>
+                  </div>
+                  <UserStatusBadge blocked={u.isBlocked} />
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <RoleBadge role={u.role} />
+                  <span className="text-xs text-muted-foreground">
+                    Joined {formatDate(u.joinedAt)}
+                  </span>
+                </div>
+
+                {u.role === "vendor" && u.businessName ? (
+                  <p className="mt-1.5 truncate text-xs text-muted-foreground">
+                    {u.businessName}
+                  </p>
+                ) : null}
+
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setViewing(u)}
+                  >
+                    View
+                  </Button>
+                  {u.role !== "admin" ? (
+                    u.isBlocked ? (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => setViewing(user)}
+                        className="flex-1 gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => setBlocking(u)}
                       >
-                        View
+                        <CircleCheck aria-hidden className="size-3.5" />
+                        Unblock
                       </Button>
-                      {user.role !== "admin" ? (
-                        user.isBlocked ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                            onClick={() => setBlocking(user)}
-                          >
-                            <CircleCheck aria-hidden className="size-3.5" />{" "}
-                            Unblock
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 border-red-200 text-red-700 hover:bg-red-50"
-                            onClick={() => setBlocking(user)}
-                          >
-                            <Ban aria-hidden className="size-3.5" /> Block
-                          </Button>
-                        )
-                      ) : (
-                        <span
-                          className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground"
-                          title="Admin accounts cannot be blocked"
-                        >
-                          <ShieldOff aria-hidden className="size-3.5" />{" "}
-                          Protected
-                        </span>
-                      )}
-                    </div>
-                  </td>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                        onClick={() => setBlocking(u)}
+                      >
+                        <Ban aria-hidden className="size-3.5" />
+                        Block
+                      </Button>
+                    )
+                  ) : (
+                    <span className="inline-flex flex-1 items-center justify-center gap-1 text-xs text-muted-foreground">
+                      <ShieldOff aria-hidden className="size-3.5" /> Protected
+                    </span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div
+            className={`hidden overflow-x-auto rounded-xl border border-border bg-card shadow-xs transition-opacity md:block ${
+              isFetching ? "opacity-60" : "opacity-100"
+            }`}
+            aria-busy={isFetching}
+          >
+            <table className="w-full min-w-[900px] text-sm">
+              <caption className="sr-only">All registered users</caption>
+              <thead>
+                <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    User
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Email
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Role
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Business Name
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 font-medium">
+                    Joined
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-right font-medium"
+                  >
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((user) => (
+                  <tr
+                    key={user.id}
+                    className={
+                      user.isBlocked
+                        ? "border-b border-border/60 bg-red-50/40 last:border-0"
+                        : "border-b border-border/60 last:border-0"
+                    }
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar className="size-8 border border-border">
+                          <AvatarImage src={user.image} alt={user.name} />
+                          <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">
+                            {initials(user.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-foreground">
+                          {user.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="max-w-52 truncate px-4 py-3 text-muted-foreground">
+                      {user.email}
+                    </td>
+                    <td className="px-4 py-3">
+                      <RoleBadge role={user.role} />
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {user.role === "vendor"
+                        ? (user.businessName ?? "—")
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <UserStatusBadge blocked={user.isBlocked} />
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {formatDate(user.joinedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setViewing(user)}
+                        >
+                          View
+                        </Button>
+                        {user.role !== "admin" ? (
+                          user.isBlocked ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => setBlocking(user)}
+                            >
+                              <CircleCheck aria-hidden className="size-3.5" />{" "}
+                              Unblock
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                              onClick={() => setBlocking(user)}
+                            >
+                              <Ban aria-hidden className="size-3.5" /> Block
+                            </Button>
+                          )
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground"
+                            title="Admin accounts cannot be blocked"
+                          >
+                            <ShieldOff aria-hidden className="size-3.5" />{" "}
+                            Protected
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* View details */}
