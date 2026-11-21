@@ -108,11 +108,11 @@ export function BookingDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent
-        className="gap-0 overflow-hidden rounded-2xl border-border/70 bg-card p-0 shadow-2xl sm:max-w-[34rem] max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl"
+        className="block gap-0 overflow-hidden rounded-2xl border-border/70 bg-card p-0 shadow-2xl sm:max-w-[34rem] max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl"
       >
-        <div className="flex max-h-[92svh] flex-col sm:max-h-[min(88vh,780px)]">
+        <div className="flex w-full min-w-0 max-h-[92svh] flex-col sm:max-h-[min(88vh,780px)]">
           {/* Header — fixed while the form scrolls */}
-          <header className="relative shrink-0 border-b border-border/70 bg-linear-to-br from-rose-tint/80 via-card to-card px-5 pb-5 pt-4 sm:px-6 sm:pt-6">
+          <header className="relative w-full min-w-0 shrink-0 border-b border-border/70 bg-linear-to-br from-rose-tint/80 via-card to-card px-5 pb-5 pt-4 sm:px-6 sm:pt-6">
             <div
               className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border sm:hidden"
               aria-hidden
@@ -133,9 +133,9 @@ export function BookingDialog({
           </header>
 
           {/* Scrollable body */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
+          <div className="min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
             {/* Service summary */}
-            <div className="flex gap-3 rounded-2xl border border-border/80 bg-muted/30 p-3 sm:gap-4 sm:p-4">
+            <div className="flex w-full min-w-0 gap-3 rounded-2xl border border-border/80 bg-muted/30 p-3 sm:gap-4 sm:p-4">
               <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:size-28">
                 <SafeImage
                   src={service.images[0]}
@@ -176,7 +176,7 @@ export function BookingDialog({
             <form
               id="booking-form"
               onSubmit={(e) => void handleSubmit(e)}
-              className="mt-6 space-y-5"
+              className="mt-6 w-full min-w-0 space-y-5"
             >
               <div className="space-y-2">
                 <Label htmlFor="booking-date" className="text-sm font-medium">
@@ -267,7 +267,7 @@ export function BookingDialog({
                   placeholder="Share your vision, guest count, or any special requests…"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="min-h-24 resize-none"
+                  className="min-h-24 resize-none field-sizing-fixed"
                   rows={4}
                   maxLength={600}
                 />
@@ -288,7 +288,7 @@ export function BookingDialog({
           </div>
 
           {/* Footer — always visible */}
-          <footer className="shrink-0 border-t border-border/70 bg-card/95 px-5 py-4 backdrop-blur sm:px-6">
+          <footer className="w-full min-w-0 shrink-0 border-t border-border/70 bg-card/95 px-5 py-4 backdrop-blur sm:px-6">
             <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
               <Button
                 type="button"
