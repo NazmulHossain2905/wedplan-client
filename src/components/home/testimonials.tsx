@@ -50,7 +50,7 @@ function Stars({ rating }: { rating: number }) {
 export function Testimonials() {
   return (
     <section
-      className="border-y border-border/70 bg-white/60"
+      className="border-y border-border/70 bg-white/60 dark:bg-card/40"
       aria-labelledby="testimonials-heading"
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

@@ -3,6 +3,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { usePathname, useRouter } from "next/navigation";
+import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,11 +26,18 @@ function BlockedUserWatcher() {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
-      <BlockedUserWatcher />
-      {children}
-      <Toaster position="top-right" richColors closeButton />
-    </AuthProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <AuthProvider>
+        <BlockedUserWatcher />
+        {children}
+        <Toaster position="top-right" richColors closeButton />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

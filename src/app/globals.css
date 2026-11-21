@@ -37,6 +37,18 @@
   --sidebar-accent-foreground: #683e4b;
   --sidebar-border: #eae2dc;
   --sidebar-ring: #c98291;
+
+  /* Brand palette (light) */
+  --brand-ivory: #faf8f5;
+  --brand-burgundy: #683e4b;
+  --brand-burgundy-deep: #53303b;
+  --brand-rose: #c98291;
+  --brand-rose-soft: #e8bfc5;
+  --brand-rose-tint: #f9eef0;
+  --brand-sage: #8e9b84;
+  --brand-sage-tint: #eef2ea;
+  --brand-charcoal: #29272b;
+  --brand-warm-gray: #79757b;
 }
 
 @theme inline {
@@ -79,17 +91,17 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* WedPlan brand palette */
-  --color-ivory: #faf8f5;
-  --color-burgundy: #683e4b;
-  --color-burgundy-deep: #53303b;
-  --color-rose: #c98291;
-  --color-rose-soft: #e8bfc5;
-  --color-rose-tint: #f9eef0;
-  --color-sage: #8e9b84;
-  --color-sage-tint: #eef2ea;
-  --color-charcoal: #29272b;
-  --color-warm-gray: #79757b;
+  /* WedPlan brand palette — values live in :root / .dark so they can switch. */
+  --color-ivory: var(--brand-ivory);
+  --color-burgundy: var(--brand-burgundy);
+  --color-burgundy-deep: var(--brand-burgundy-deep);
+  --color-rose: var(--brand-rose);
+  --color-rose-soft: var(--brand-rose-soft);
+  --color-rose-tint: var(--brand-rose-tint);
+  --color-sage: var(--brand-sage);
+  --color-sage-tint: var(--brand-sage-tint);
+  --color-charcoal: var(--brand-charcoal);
+  --color-warm-gray: var(--brand-warm-gray);
   --font-heading: var(--font-sans);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
@@ -130,6 +142,77 @@
   --sidebar-ring: #c98291;
 }
 
+/* Brand-tinted surfaces have hard-coded light values in the palette above.
+   Re-map them in dark mode so tinted cards, pills and icons stay dark and
+   burgundy text remains legible on them. */
+.dark {
+  --brand-ivory: #201d20;
+  --brand-rose-tint: #35272e;
+  --brand-rose-soft: #6b4754;
+  --brand-sage-tint: #2b3529;
+  --brand-charcoal: #f3eefa;
+  --brand-warm-gray: #b8b2bc;
+}
+
+.dark .text-burgundy,
+.dark .hover\:text-burgundy:hover {
+  color: #e3b0bc;
+}
+
+/* Dark equivalents for the few hard-coded accent text colours. */
+.dark .text-\[\#4d5c44\] {
+  color: #b8c7ad;
+}
+.dark .text-\[\#8a6d2f\] {
+  color: #e3c274;
+}
+.dark .text-\[\#3d2f52\] {
+  color: #d9a5b1;
+}
+.dark .text-\[\#425466\] {
+  color: #b8b2bc;
+}
+.dark .text-\[\#8792a2\] {
+  color: #b8b2bc;
+}
+
+/* Soft status surfaces used by badges and banners. */
+.dark .bg-amber-50 {
+  background-color: #342a1c;
+}
+.dark .border-amber-200 {
+  border-color: #6d572c;
+}
+.dark .text-amber-900 {
+  color: #fde68a;
+}
+.dark .text-amber-800 {
+  color: #fcd34d;
+}
+.dark .bg-red-50 {
+  background-color: #3a2326;
+}
+.dark .border-red-200 {
+  border-color: #6b3030;
+}
+.dark .text-red-700,
+.dark .text-red-800 {
+  color: #fca5a5;
+}
+.dark .bg-emerald-100 {
+  background-color: #1f3a2b;
+}
+.dark .text-emerald-700,
+.dark .text-emerald-800 {
+  color: #a7f3d0;
+}
+.dark .bg-sky-100 {
+  background-color: #1e3340;
+}
+.dark .text-sky-800 {
+  color: #bae6fd;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -164,6 +247,17 @@
   border: 2px solid #faf8f5;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: #c98291;
+}
+.dark ::selection {
+  background-color: #6b4754;
+  color: #f3eefa;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #5d5157;
+  border-color: #201d20;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #c98291;
 }
 

@@ -1,4 +1,3 @@
- 
 "use client";
 
 import * as React from "react";
@@ -48,7 +47,7 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
               type="button"
               onClick={() => go(-1)}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
+              className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 dark:bg-card/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
             >
               <ChevronLeft aria-hidden className="size-5" />
             </button>
@@ -56,7 +55,7 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
               type="button"
               onClick={() => go(1)}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
+              className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 dark:bg-card/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
             >
               <ChevronRight aria-hidden className="size-5" />
             </button>
@@ -66,7 +65,7 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
           type="button"
           onClick={() => setLightboxOpen(true)}
           aria-label="Open image in full screen"
-          className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/85 text-foreground shadow-md backdrop-blur-sm transition-transform hover:scale-105"
+          className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/85 dark:bg-card/85 text-foreground shadow-md backdrop-blur-sm transition-transform hover:scale-105"
         >
           <Expand aria-hidden className="size-4" />
         </button>
@@ -76,7 +75,11 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
       </div>
 
       {safeImages.length > 1 ? (
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-5" role="tablist" aria-label="Service image thumbnails">
+        <div
+          className="grid grid-cols-4 gap-3 sm:grid-cols-5"
+          role="tablist"
+          aria-label="Service image thumbnails"
+        >
           {safeImages.map((src, i) => (
             <button
               key={src + i}
@@ -92,7 +95,12 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
                   : "border-transparent opacity-75 hover:opacity-100",
               )}
             >
-              <img src={src} alt="" loading="lazy" className="size-full object-cover" />
+              <img
+                src={src}
+                alt=""
+                loading="lazy"
+                className="size-full object-cover"
+              />
             </button>
           ))}
         </div>
@@ -100,7 +108,9 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
 
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-4xl border-none bg-black/90 p-2 sm:p-4">
-          <DialogTitle className="sr-only">{serviceName} — full screen image</DialogTitle>
+          <DialogTitle className="sr-only">
+            {serviceName} — full screen image
+          </DialogTitle>
           <div className="relative">
             <img
               src={safeImages[activeIndex]}

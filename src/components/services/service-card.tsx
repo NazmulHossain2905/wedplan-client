@@ -38,11 +38,11 @@ export function ServiceCard({ service, vendor, className }: ServiceCardProps) {
           alt={service.serviceName}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-burgundy shadow-sm backdrop-blur-sm">
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-card/90 px-3 py-1 text-xs font-medium text-burgundy shadow-sm backdrop-blur-sm">
           {service.category}
         </span>
         {service.rating > 0 ? (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 dark:bg-card/90 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
             <Star
               aria-hidden
               className="size-3.5 fill-amber-500 text-amber-500"

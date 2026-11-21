@@ -115,7 +115,7 @@ function VendorSubscription() {
         className={cn(
           "flex flex-col gap-4 rounded-xl border p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between",
           isPremium
-            ? "border-[#c9a227]/40 bg-gradient-to-r from-[#faf3dc] to-card"
+            ? "border-[#c9a227]/40 bg-gradient-to-r from-[#faf3dc] to-card dark:from-[#342b1d]"
             : "border-border bg-card",
         )}
       >

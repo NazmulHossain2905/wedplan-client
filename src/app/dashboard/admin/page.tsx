@@ -150,12 +150,12 @@ function AdminOverview() {
 
   const usersByRole = useMemo(
     () => [
-      { name: "Vendors", value: stats.vendors, fill: "#683e4b" },
-      { name: "Customers", value: stats.customers, fill: "#c98291" },
+      { name: "Vendors", value: stats.vendors, fill: "var(--chart-1)" },
+      { name: "Customers", value: stats.customers, fill: "var(--chart-2)" },
       {
         name: "Admins",
         value: users.filter((u) => u.role === "admin").length,
-        fill: "#8e9b84",
+        fill: "var(--chart-3)",
       },
     ],
     [users, stats],
@@ -166,22 +166,22 @@ function AdminOverview() {
       {
         name: "Pending",
         value: bookings.filter((b) => b.status === "pending").length,
-        fill: "#f2b552",
+        fill: "var(--chart-4)",
       },
       {
         name: "Accepted",
         value: bookings.filter((b) => b.status === "accepted").length,
-        fill: "#5c9d63",
+        fill: "var(--chart-3)",
       },
       {
         name: "Rejected",
         value: bookings.filter((b) => b.status === "rejected").length,
-        fill: "#d66d66",
+        fill: "var(--destructive)",
       },
       {
         name: "Cancelled",
         value: bookings.filter((b) => b.status === "cancelled").length,
-        fill: "#9b96a0",
+        fill: "var(--chart-5)",
       },
     ],
     [bookings],
@@ -277,7 +277,7 @@ function AdminOverview() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#3d2f52]/15 bg-linear-to-br from-[#efe9f2] via-card to-card p-6 shadow-xs sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border border-[#3d2f52]/15 bg-linear-to-br from-[#efe9f2] via-card to-card dark:from-[#342832] p-6 shadow-xs sm:p-8">
         <div
           className="pointer-events-none absolute -right-16 -top-24 size-56 rounded-full bg-[#3d2f52]/10 blur-3xl"
           aria-hidden
@@ -472,32 +472,32 @@ function AdminOverview() {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#eae2dc"
+                  stroke="var(--border)"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="status"
-                  tick={{ fontSize: 12, fill: "#79757b" }}
+                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "#79757b" }}
+                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip cursor={{ fill: "#f9eef0" }} />
+                <Tooltip cursor={{ fill: "var(--accent)" }} />
                 <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={48}>
                   {servicesByStatus.map((entry) => (
                     <Cell
                       key={entry.status}
                       fill={
                         entry.status === "Approved"
-                          ? "#8e9b84"
+                          ? "var(--chart-3)"
                           : entry.status === "Pending"
-                            ? "#f2b552"
-                            : "#d66d66"
+                            ? "var(--chart-4)"
+                            : "var(--destructive)"
                       }
                     />
                   ))}

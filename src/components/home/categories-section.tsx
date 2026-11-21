@@ -36,7 +36,7 @@ export function CategoriesSection() {
 
   return (
     <section
-      className="border-y border-border/70 bg-white/60"
+      className="border-y border-border/70 bg-white/60 dark:bg-card/40"
       aria-labelledby="categories-heading"
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

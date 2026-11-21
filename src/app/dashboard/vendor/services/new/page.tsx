@@ -159,7 +159,7 @@ function AddService() {
               {PREMIUM_PLAN.features.slice(0, 3).map((f) => (
                 <li
                   key={f}
-                  className="flex items-start gap-2 rounded-lg bg-white/70 px-3 py-2.5 text-xs leading-relaxed text-amber-900"
+                  className="flex items-start gap-2 rounded-lg bg-white/70 dark:bg-card/70 px-3 py-2.5 text-xs leading-relaxed text-amber-900"
                 >
                   <Check
                     aria-hidden

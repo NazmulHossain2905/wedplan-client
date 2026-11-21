@@ -1,4 +1,3 @@
- 
 "use client";
 
 import * as React from "react";
@@ -23,12 +22,19 @@ export function Hero() {
       : {
           initial: { y: 28 },
           animate: { y: 0 },
-          transition: { duration: 0.65, delay, ease: [0.21, 0.47, 0.32, 0.98] as const },
+          transition: {
+            duration: 0.65,
+            delay,
+            ease: [0.21, 0.47, 0.32, 0.98] as const,
+          },
         };
 
   return (
     <section className="relative overflow-hidden bg-ivory">
-      <div className="wed-texture pointer-events-none absolute inset-0 opacity-40" aria-hidden />
+      <div
+        className="wed-texture pointer-events-none absolute inset-0 opacity-40"
+        aria-hidden
+      />
       <div
         className="pointer-events-none absolute -right-40 -top-40 size-[480px] rounded-full bg-rose-soft/30 blur-3xl"
         aria-hidden
@@ -42,7 +48,7 @@ export function Hero() {
         {/* Copy */}
         <div className="max-w-xl">
           <motion.div {...fadeUp(0)}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-rose-soft bg-white/80 px-3.5 py-1.5 text-xs font-medium text-burgundy shadow-xs backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-rose-soft bg-white/80 dark:bg-card/80 px-3.5 py-1.5 text-xs font-medium text-burgundy shadow-xs backdrop-blur-sm">
               <Sparkles aria-hidden className="size-3.5 text-rose" />
               Bangladesh&apos;s trusted wedding marketplace
             </span>
@@ -61,20 +67,33 @@ export function Hero() {
                 className="absolute -bottom-1 left-0 w-full text-rose-soft"
                 preserveAspectRatio="none"
               >
-                <path d="M3 9c40-6 140-8 214-4" stroke="currentColor" strokeWidth="5" strokeLinecap="round" fill="none" />
+                <path
+                  d="M3 9c40-6 140-8 214-4"
+                  stroke="currentColor"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
               </svg>
             </span>
           </motion.h1>
 
-          <motion.p {...fadeUp(0.16)} className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Discover trusted wedding professionals, explore beautiful venues, and bring your dream
-            celebration to life — all in one place.
+          <motion.p
+            {...fadeUp(0.16)}
+            className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg"
+          >
+            Discover trusted wedding professionals, explore beautiful venues,
+            and bring your dream celebration to life — all in one place.
           </motion.p>
 
-          <motion.div {...fadeUp(0.24)} className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <motion.div
+            {...fadeUp(0.24)}
+            className="mt-8 flex flex-col gap-3 sm:flex-row"
+          >
             <Button asChild size="lg" className="h-12 px-7 text-base shadow-sm">
               <Link href="/services">
-                Explore Wedding Services <ArrowRight aria-hidden className="size-4" />
+                Explore Wedding Services{" "}
+                <ArrowRight aria-hidden className="size-4" />
               </Link>
             </Button>
             <Button
@@ -89,29 +108,43 @@ export function Hero() {
             </Button>
           </motion.div>
 
-          <motion.div {...fadeUp(0.32)} className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <motion.div
+            {...fadeUp(0.32)}
+            className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
+          >
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2.5">
                 {TRUST_AVATARS.map((src, i) => (
-                  <Avatar key={i} className="size-9 border-2 border-white shadow-sm">
+                  <Avatar
+                    key={i}
+                    className="size-9 border-2 border-white shadow-sm"
+                  >
                     <AvatarImage src={src} alt="" />
-                    <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">♥</AvatarFallback>
+                    <AvatarFallback className="bg-rose-tint text-[10px] text-burgundy">
+                      ♥
+                    </AvatarFallback>
                   </Avatar>
                 ))}
               </div>
               <div className="text-sm">
                 <p className="font-semibold text-foreground">2,000+ couples</p>
-                <p className="text-muted-foreground">planned their day with WedPlan</p>
+                <p className="text-muted-foreground">
+                  planned their day with WedPlan
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2.5 text-sm">
               <div className="flex" aria-hidden>
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="size-4 fill-amber-500 text-amber-500" />
+                  <Star
+                    key={i}
+                    className="size-4 fill-amber-500 text-amber-500"
+                  />
                 ))}
               </div>
               <span className="text-muted-foreground">
-                <strong className="font-semibold text-foreground">4.9</strong> average vendor rating
+                <strong className="font-semibold text-foreground">4.9</strong>{" "}
+                average vendor rating
               </span>
             </div>
           </motion.div>
@@ -124,7 +157,11 @@ export function Hero() {
             : {
                 initial: { scale: 0.96, y: 20 },
                 animate: { scale: 1, y: 0 },
-                transition: { duration: 0.8, delay: 0.15, ease: [0.21, 0.47, 0.32, 0.98] as const },
+                transition: {
+                  duration: 0.8,
+                  delay: 0.15,
+                  ease: [0.21, 0.47, 0.32, 0.98] as const,
+                },
               })}
           className="relative mx-auto w-full max-w-lg lg:max-w-none"
         >
@@ -148,17 +185,19 @@ export function Hero() {
               loading="eager"
             />
 
-            <div className="absolute -left-3 top-[46%] flex items-center gap-2.5 rounded-xl border border-border bg-white/95 px-3.5 py-2.5 shadow-md backdrop-blur-sm sm:-left-6">
+            <div className="absolute -left-3 top-[46%] flex items-center gap-2.5 rounded-xl border border-border bg-white/95 dark:bg-card/95 px-3.5 py-2.5 shadow-md backdrop-blur-sm sm:-left-6">
               <span className="flex size-9 items-center justify-center rounded-full bg-sage-tint text-[#4d5c44]">
                 <ShieldCheck aria-hidden className="size-4" />
               </span>
               <div className="text-xs">
-                <p className="font-semibold text-foreground">Verified Vendors</p>
+                <p className="font-semibold text-foreground">
+                  Verified Vendors
+                </p>
                 <p className="text-muted-foreground">Reviewed before listing</p>
               </div>
             </div>
 
-            <div className="absolute -right-2 bottom-[46%] flex items-center gap-2.5 rounded-xl border border-border bg-white/95 px-3.5 py-2.5 shadow-md backdrop-blur-sm sm:-right-5">
+            <div className="absolute -right-2 bottom-[46%] flex items-center gap-2.5 rounded-xl border border-border bg-white/95 dark:bg-card/95 px-3.5 py-2.5 shadow-md backdrop-blur-sm sm:-right-5">
               <span className="flex size-9 items-center justify-center rounded-full bg-rose-tint text-burgundy">
                 <Heart aria-hidden className="size-4 fill-current" />
               </span>

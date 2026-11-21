@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
@@ -163,6 +164,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {!hydrated ? (
             <Skeleton className="size-9 rounded-full" />
           ) : isAuthenticated && user ? (
@@ -192,6 +194,7 @@ export function Navbar() {
 
         {/* Mobile navigation */}
         <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
           {!hydrated ? (
             <Skeleton className="size-9 rounded-full" />
           ) : isAuthenticated && user ? (
@@ -240,6 +243,7 @@ export function Navbar() {
                 ) : null}
               </nav>
               <div className="mt-auto flex flex-col gap-2 border-t border-border px-5 py-4">
+                <ThemeToggle withLabel />
                 {!hydrated ? null : isAuthenticated && user ? (
                   <>
                     <Button

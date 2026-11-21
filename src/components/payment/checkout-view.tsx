@@ -11,9 +11,9 @@ import Link from "next/link";
  */
 export function CheckoutView() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f6f9fc] px-4">
-      <div className="max-w-md rounded-xl border border-[#e3e8ee] bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#f6f9fc] text-[#425466]">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+      <div className="max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <Lock aria-hidden className="size-5" />
         </div>
         <h1 className="mt-5 font-serif text-2xl font-semibold">
@@ -25,9 +25,11 @@ export function CheckoutView() {
           Stripe verifies the payment.
         </p>
         <Button asChild className="mt-6" variant="outline">
-          <Link href="/dashboard/vendor/subscription">Back to Subscription</Link>
+          <Link href="/dashboard/vendor/subscription">
+            Back to Subscription
+          </Link>
         </Button>
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-[#8792a2]">
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <ShieldCheck aria-hidden className="size-3.5" />
           No card details are collected on this site.
         </p>

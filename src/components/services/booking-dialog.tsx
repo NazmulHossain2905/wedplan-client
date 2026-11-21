@@ -107,9 +107,7 @@ export function BookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
-      <DialogContent
-        className="block gap-0 overflow-hidden rounded-2xl border-border/70 bg-card p-0 shadow-2xl sm:max-w-[34rem] max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl"
-      >
+      <DialogContent className="block gap-0 overflow-hidden rounded-2xl border-border/70 bg-card p-0 shadow-2xl sm:max-w-[34rem] max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl">
         <div className="flex w-full min-w-0 max-h-[92svh] flex-col sm:max-h-[min(88vh,780px)]">
           {/* Header — fixed while the form scrolls */}
           <header className="relative w-full min-w-0 shrink-0 border-b border-border/70 bg-linear-to-br from-rose-tint/80 via-card to-card px-5 pb-5 pt-4 sm:px-6 sm:pt-6">
@@ -118,7 +116,7 @@ export function BookingDialog({
               aria-hidden
             />
             <DialogHeader className="pr-8 text-left">
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-burgundy ring-1 ring-rose-soft/60">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/80 dark:bg-card/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-burgundy ring-1 ring-rose-soft/60">
                 <Sparkles aria-hidden className="size-3" />
                 Booking request
               </span>
@@ -167,7 +165,7 @@ export function BookingDialog({
                   <span className="truncate">{service.location}</span>
                 </p>
 
-                <p className="mt-2 w-fit rounded-full bg-white/85 px-2.5 py-1 text-xs font-semibold text-burgundy ring-1 ring-rose-soft/60">
+                <p className="mt-2 w-fit rounded-full bg-white/85 dark:bg-card/85 px-2.5 py-1 text-xs font-semibold text-burgundy ring-1 ring-rose-soft/60">
                   {formatBDT(service.price)}
                 </p>
               </div>
@@ -199,7 +197,8 @@ export function BookingDialog({
                     aria-invalid={Boolean(errors.date)}
                     className={cn(
                       "h-11 pl-9",
-                      errors.date && "border-destructive focus-visible:ring-destructive/30",
+                      errors.date &&
+                        "border-destructive focus-visible:ring-destructive/30",
                     )}
                     required
                   />
@@ -217,7 +216,10 @@ export function BookingDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="booking-location" className="text-sm font-medium">
+                <Label
+                  htmlFor="booking-location"
+                  className="text-sm font-medium"
+                >
                   Event Location <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative">
@@ -236,7 +238,8 @@ export function BookingDialog({
                     aria-invalid={Boolean(errors.location)}
                     className={cn(
                       "h-11 pl-9",
-                      errors.location && "border-destructive focus-visible:ring-destructive/30",
+                      errors.location &&
+                        "border-destructive focus-visible:ring-destructive/30",
                     )}
                     maxLength={140}
                     required
@@ -252,7 +255,10 @@ export function BookingDialog({
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="booking-message" className="text-sm font-medium">
+                  <Label
+                    htmlFor="booking-message"
+                    className="text-sm font-medium"
+                  >
                     Additional Message
                     <span className="ml-1.5 text-xs font-normal text-muted-foreground">
                       (optional)
@@ -279,9 +285,9 @@ export function BookingDialog({
                   className="mt-0.5 size-4 shrink-0 text-sage"
                 />
                 <p>
-                  <span className="font-semibold">No payment now.</span>{" "}
-                  Sending this request is free — discuss the details with the
-                  vendor first.
+                  <span className="font-semibold">No payment now.</span> Sending
+                  this request is free — discuss the details with the vendor
+                  first.
                 </p>
               </div>
             </form>

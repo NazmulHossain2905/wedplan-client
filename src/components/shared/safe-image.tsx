@@ -9,7 +9,7 @@ import * as React from "react";
  */
 
 const FALLBACK_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#f7ece7"/><text x="200" y="150" font-family="Georgia, serif" font-size="20" fill="#b08a94" text-anchor="middle">WedPlan</text></svg>`,
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#6b5b63"/><text x="200" y="150" font-family="Georgia, serif" font-size="20" fill="#f3eefa" text-anchor="middle">WedPlan</text></svg>`,
 )}`;
 
 export function SafeImage({
