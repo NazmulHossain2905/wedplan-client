@@ -3,9 +3,6 @@ export const APP_TAGLINE = "Your dream wedding, beautifully planned.";
 export const APP_DESCRIPTION =
   "WedPlan is a wedding planning platform where couples discover trusted wedding professionals, explore beautiful venues, and request bookings — all in one place.";
 
-/** Password shared by the seeded demo accounts (documented in the README). */
-export const DEMO_PASSWORD = "Demo@123";
-
 export const CONTACT_INFO = {
   email: "hello@wedplan.com",
   phone: "+880 1700-000000",

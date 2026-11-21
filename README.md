@@ -28,14 +28,14 @@ cp .env.example .env   # Windows: Copy-Item .env.example .env
 
 Fill in `.env`. Secrets (Better Auth secret, MongoDB URI, Google OAuth, ImgBB key) stay local and are never committed.
 
-| Variable | Purpose |
-| --- | --- |
-| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | Better Auth configuration and JWT signing |
-| `MONGODB_URI`, `DB_NAME` | Database shared with the server |
-| `NEXT_PUBLIC_API_URL` | Express API base URL, e.g. `http://localhost:5000` |
-| `ADMIN_EMAILS` | Comma-separated emails allowed to register as admin; leave empty otherwise |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google login |
-| `IMGBB_API_KEY` | Image hosting |
+| Variable                                   | Purpose                                                                    |
+| ------------------------------------------ | -------------------------------------------------------------------------- |
+| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`    | Better Auth configuration and JWT signing                                  |
+| `MONGODB_URI`, `DB_NAME`                   | Database shared with the server                                            |
+| `NEXT_PUBLIC_API_URL`                      | Express API base URL, e.g. `http://localhost:5000`                         |
+| `ADMIN_EMAILS`                             | Comma-separated emails allowed to register as admin; leave empty otherwise |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google login                                                      |
+| `IMGBB_API_KEY`                            | Image hosting                                                              |
 
 **Creating an admin:** add the email to `ADMIN_EMAILS`, restart Next.js, then sign up normally with that email. Public sign-ups can only become customers or vendors.
 
@@ -51,6 +51,6 @@ Start `wedplan-server` (`npm start`, port 5000) at the same time; the client sen
 
 ## Links
 
-- Live website: _to be added after deployment_
+- Live website: https://wedplan-bd.vercel.app/
 - Client repository: https://github.com/NazmulHossain2905/wedplan-client
 - Server repository: https://github.com/NazmulHossain2905/wedplan-server
