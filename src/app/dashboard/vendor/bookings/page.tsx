@@ -59,7 +59,7 @@ function VendorBookings() {
 
     async function loadBookings() {
       try {
-        const res = await api.bookings();
+        const res = await api.vendorBookings();
         if (!cancelled) setData(res.bookings);
       } catch {
         // Leave whatever is already on screen.

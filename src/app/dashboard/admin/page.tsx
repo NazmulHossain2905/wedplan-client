@@ -97,7 +97,7 @@ function AdminOverview() {
             api.adminStats(),
             api.adminUsers(),
             api.adminServices(),
-            api.bookings(),
+            api.adminBookings(),
             api.adminTransactions(),
           ]);
 

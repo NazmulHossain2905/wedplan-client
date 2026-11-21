@@ -63,7 +63,7 @@ function VendorOverview() {
       try {
         const [statsRes, bookingsRes, servicesRes] = await Promise.all([
           api.vendorStats(),
-          api.bookings(),
+          api.vendorBookings(),
           api.vendorServices(),
         ]);
         if (cancelled) return;
