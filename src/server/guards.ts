@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, ensureAuthConnection } from "@/lib/auth";
 import type { User } from "@/types";
 import { headers } from "next/headers";
 
@@ -12,6 +12,7 @@ import { headers } from "next/headers";
  * app's `User` shape at runtime.
  */
 export async function getSessionUser(): Promise<User | null> {
+  await ensureAuthConnection();
   const result = await auth.api.getSession({ headers: await headers() });
   if (!result?.user) return null;
   return result.user as unknown as User;

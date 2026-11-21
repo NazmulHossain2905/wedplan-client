@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { auth } from "./auth";
+import { auth, ensureAuthConnection } from "./auth";
 
 /**
  * `Authorization` header for backend calls, or `null` when the session has no
@@ -8,6 +8,7 @@ import { auth } from "./auth";
  * decide what to do.
  */
 export const getServerToken = async (): Promise<string | null> => {
+  await ensureAuthConnection();
   const jwt = await auth.api.getToken({
     headers: await headers(),
   });

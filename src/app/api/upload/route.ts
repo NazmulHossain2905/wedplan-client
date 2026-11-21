@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, ensureAuthConnection } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { headers } from "next/headers";
 
@@ -25,6 +25,7 @@ function fail(message: string, status: number) {
 export async function POST(request: Request) {
   // Only signed-in users may upload. Sign-up completes before this is called,
   // so the new account's session cookie is already present.
+  await ensureAuthConnection();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return fail("You must be signed in to upload an image.", 401);
@@ -74,15 +75,12 @@ export async function POST(request: Request) {
     return fail("Could not reach ImgBB. Please try again.", 502);
   }
 
-  const payload = (await response.json().catch(() => null)) as
-    | ImgbbResponse
-    | null;
+  const payload = (await response
+    .json()
+    .catch(() => null)) as ImgbbResponse | null;
 
   if (!response.ok || !payload?.success || !payload.data?.url) {
-    return fail(
-      payload?.error?.message ?? "ImgBB rejected the upload.",
-      502,
-    );
+    return fail(payload?.error?.message ?? "ImgBB rejected the upload.", 502);
   }
 
   return Response.json({

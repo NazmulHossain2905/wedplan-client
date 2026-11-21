@@ -13,6 +13,16 @@ const client = new MongoClient(env.MONGODB_URI, {
 });
 const db = client.db(env.DB_NAME);
 
+/**
+ * A warmed serverless instance can reuse the module-level client after its
+ * topology was closed (that is exactly what produces
+ * `MongoTopologyClosedError` in /dashboard routes). Calling connect() again
+ * reopens it. The driver treats this as a no-op when already connected.
+ */
+export async function ensureAuthConnection() {
+  await client.connect();
+}
+
 /** Google sign-in is only registered when both credentials are configured. */
 const googleProvider =
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET

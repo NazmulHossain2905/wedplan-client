@@ -1,4 +1,18 @@
-import { auth } from "@/lib/auth"; // path to your auth file
+import { auth, ensureAuthConnection } from "@/lib/auth"; // path to your auth file
 import { toNextJsHandler } from "better-auth/next-js";
 
-export const { POST, GET } = toNextJsHandler(auth);
+const handler = toNextJsHandler(auth);
+
+/**
+ * Reconnect the shared Mongo client before each auth request so a warmed
+ * serverless instance never serves a request with a closed topology.
+ */
+export async function GET(request: Request) {
+  await ensureAuthConnection();
+  return handler.GET(request);
+}
+
+export async function POST(request: Request) {
+  await ensureAuthConnection();
+  return handler.POST(request);
+}
