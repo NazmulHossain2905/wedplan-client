@@ -1,3 +1,5 @@
+import { todayStr } from "@/lib/helpers";
+
 export interface PasswordChecks {
   minLength: boolean;
   hasUpper: boolean;
@@ -42,7 +44,10 @@ export function validateSignUp(input: {
   if (input.role !== "customer" && input.role !== "vendor") {
     return "Please choose an account role.";
   }
-  if (input.role === "vendor" && (!input.businessName || input.businessName.trim().length < 2)) {
+  if (
+    input.role === "vendor" &&
+    (!input.businessName || input.businessName.trim().length < 2)
+  ) {
     return "Please enter your business name.";
   }
   return null;
@@ -65,7 +70,8 @@ export function validateService(input: {
   if (!input.description.trim() || input.description.trim().length < 20) {
     return "Description must be at least 20 characters.";
   }
-  const price = typeof input.price === "string" ? Number(input.price) : input.price;
+  const price =
+    typeof input.price === "string" ? Number(input.price) : input.price;
   if (!Number.isFinite(price) || price <= 0) {
     return "Please enter a valid price greater than 0.";
   }
@@ -85,7 +91,7 @@ export function validateBooking(input: {
   if (!input.eventDate) {
     return "Please choose your event date.";
   }
-  if (input.eventDate < new Date().toISOString().slice(0, 10)) {
+  if (input.eventDate < todayStr()) {
     return "Event date cannot be in the past.";
   }
   if (!input.eventLocation.trim()) {
