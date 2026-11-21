@@ -72,10 +72,12 @@ function VendorSubscription() {
   }, [user]);
 
   const isPremium = stats?.currentPlan === "premium";
-  const myTransactions = transactions.slice().sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const myTransactions = transactions
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
   /** Creates a server-side Checkout Session and redirects to it. */
   const startCheckout = async () => {
@@ -151,9 +153,9 @@ function VendorSubscription() {
             <p className="mt-1 text-sm text-muted-foreground">
               {isPremium
                 ? stats?.planExpiresAt
-                  ? `Unlimited active services · Renews ${formatDate(stats.planExpiresAt)}`
+                  ? `Unlimited active services · Active until ${formatDate(stats.planExpiresAt)}`
                   : "Unlimited active services"
-                : `Up to ${FREE_PLAN.maxActiveServices} active services · ৳${PREMIUM_PLAN.price.toLocaleString("en-IN")}/month to upgrade`}
+                : `Up to ${FREE_PLAN.maxActiveServices} active services · ৳${PREMIUM_PLAN.price.toLocaleString("en-IN")} per 30 days to upgrade`}
             </p>
           </div>
         </div>
@@ -231,52 +233,71 @@ function VendorSubscription() {
         {/* Premium */}
         <div
           className={cn(
-            "relative overflow-hidden rounded-xl border bg-card p-7 shadow-xs",
+            "relative flex flex-col rounded-2xl border bg-card p-7 shadow-sm transition-shadow sm:p-8",
             isPremium
               ? "border-[#c9a227]/60 shadow-md"
-              : "border-[#c9a227]/50 shadow-md ring-1 ring-[#c9a227]/20",
+              : "border-[#c9a227]/50 shadow-md ring-1 ring-[#c9a227]/20 hover:shadow-lg",
           )}
         >
+          {/* Soft gold glow — clipped on its own so the badge is never cut off */}
           <div
-            className="wed-texture pointer-events-none absolute inset-0 opacity-30"
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
             aria-hidden
-          />
-          {isPremium ? (
-            <span className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-[#8a6d2f] to-[#c9a227] px-3 py-1 text-xs font-semibold text-white">
-              Your Plan
-            </span>
-          ) : (
-            <span className="absolute -top-3 left-6 rounded-full bg-burgundy px-3 py-1 text-xs font-semibold text-white">
-              Most Popular
-            </span>
-          )}
-          <div className="relative">
-            <div className="flex items-center gap-2">
+          >
+            <div className="absolute -right-14 -top-14 size-44 rounded-full bg-[#c9a227]/15 blur-2xl" />
+            <div className="absolute -bottom-16 -left-12 size-44 rounded-full bg-rose-tint/80 blur-2xl" />
+          </div>
+
+          <span
+            className={cn(
+              "absolute -top-3 left-6 z-10 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm",
+              isPremium
+                ? "bg-gradient-to-r from-[#8a6d2f] to-[#c9a227]"
+                : "bg-burgundy",
+            )}
+          >
+            {isPremium ? (
+              <Crown aria-hidden className="size-3.5" />
+            ) : (
+              <Sparkles aria-hidden className="size-3.5" />
+            )}
+            {isPremium ? "Your Plan" : "Most Popular"}
+          </span>
+
+          <div className="relative flex flex-1 flex-col">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-serif text-xl font-semibold text-foreground">
                 Premium
               </h3>
-              <Crown aria-hidden className="size-5 text-[#c9a227]" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#c9a227]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6d2f]">
+                Best value
+              </span>
             </div>
-            <p className="mt-2">
+
+            <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5">
               <span className="font-serif text-4xl font-semibold text-foreground">
                 {formatBDT(PREMIUM_PRICE_BDT)}
               </span>
-              <span className="text-sm text-muted-foreground"> /month</span>
+              <span className="text-sm text-muted-foreground">/ 30 days</span>
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              One-time payment · no auto-renewal
+            </p>
+
             <ul className="mt-6 space-y-3">
               {PREMIUM_PLAN.features.map((f) => (
                 <li
                   key={f}
                   className="flex items-start gap-2.5 text-sm text-foreground/85"
                 >
-                  <Check
-                    aria-hidden
-                    className="mt-0.5 size-4 shrink-0 text-[#8a6d2f]"
-                  />
+                  <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-[#c9a227]/15">
+                    <Check aria-hidden className="size-3 text-[#8a6d2f]" />
+                  </span>
                   {f}
                 </li>
               ))}
             </ul>
+
             <Button
               className="mt-7 w-full gap-2 shadow-sm"
               size="lg"
@@ -300,14 +321,10 @@ function VendorSubscription() {
               )}
             </Button>
             {!isPremium ? (
-              <Button
-                variant="link"
-                className="mt-2 w-full text-muted-foreground"
-                onClick={() => void startCheckout()}
-                disabled={starting}
-              >
-                Continue to checkout
-              </Button>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <ShieldCheck aria-hidden className="size-3.5 text-sage" />
+                Secure checkout powered by Stripe
+              </p>
             ) : null}
           </div>
         </div>
