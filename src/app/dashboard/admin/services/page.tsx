@@ -408,7 +408,17 @@ function AdminServices() {
                         )}{" "}
                         {busyId === service.id ? "Approving…" : "Approve"}
                       </Button>
-                    ) : null}
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                        onClick={() => setRejecting(service)}
+                        title="Hide this published service"
+                      >
+                        <XCircle aria-hidden className="size-3.5" /> Reject
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"
@@ -597,7 +607,18 @@ function AdminServices() {
                               )}{" "}
                               {busyId === service.id ? "Approving…" : "Approve"}
                             </Button>
-                          ) : null}
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1 border-red-200 text-red-700 hover:bg-red-50"
+                              onClick={() => setRejecting(service)}
+                              title="Hide this published service"
+                            >
+                              <XCircle aria-hidden className="size-3.5" />{" "}
+                              Reject
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="icon"
