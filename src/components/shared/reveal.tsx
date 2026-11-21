@@ -12,7 +12,14 @@ interface RevealProps {
   as?: "div" | "section" | "li" | "article";
 }
 
-/** Subtle scroll-into-view reveal. Honours prefers-reduced-motion. */
+/**
+ * Subtle scroll-into-view reveal. Honours prefers-reduced-motion.
+ *
+ * Only the position is animated, never opacity: content must stay visible
+ * even if the IntersectionObserver callback does not fire (e.g. content that
+ * is already in view on load, or a hydration hiccup). A stuck opacity:0 would
+ * leave an empty white section.
+ */
 export function Reveal({
   children,
   delay = 0,
@@ -24,8 +31,8 @@ export function Reveal({
   const Comp = motion[as];
   return (
     <Comp
-      initial={reduce ? undefined : { opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduce ? undefined : { y }}
+      whileInView={{ y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.55, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
       className={className}
@@ -36,9 +43,8 @@ export function Reveal({
 }
 
 const staggerChild: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { y: 20 },
   show: {
-    opacity: 1,
     y: 0,
     transition: { duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] },
   },
@@ -50,10 +56,9 @@ export const staggerContainer = {
   show: { transition: { staggerChildren: 0.07 } },
 };
 
-export const staggerItem = {
-  hidden: { opacity: 0, y: 18 },
+export const staggerItem: Variants = {
+  hidden: { y: 18 },
   show: {
-    opacity: 1,
     y: 0,
     transition: { duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] },
   },
