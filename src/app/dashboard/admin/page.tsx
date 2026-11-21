@@ -10,7 +10,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { StatCard } from "@/components/shared/stat-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -248,47 +254,74 @@ function AdminOverview() {
   if (isLoading && !statsData) {
     return (
       <div className="space-y-6">
-        <div className="h-28 w-full animate-pulse rounded-xl bg-muted" />
+        <Skeleton className="h-36 w-full rounded-2xl" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-28 w-full animate-pulse rounded-xl bg-muted"
-            />
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-80 w-full rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-gradient-to-r from-[#efe9f2] via-card to-card p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck aria-hidden className="size-4 text-[#3d2f52]" />{" "}
-            Platform administration
-          </p>
-          <h1 className="mt-0.5 font-serif text-2xl font-semibold text-foreground sm:text-3xl">
-            Admin Overview
-          </h1>
-          <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
-            {stats.pendingServices > 0
-              ? `${stats.pendingServices} ${stats.pendingServices === 1 ? "service needs" : "services need"} review before going live.`
-              : "All services have been reviewed — the marketplace is up to date."}
-          </p>
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-[#3d2f52]/15 bg-linear-to-br from-[#efe9f2] via-card to-card p-6 shadow-xs sm:p-8">
+        <div
+          className="pointer-events-none absolute -right-16 -top-24 size-56 rounded-full bg-[#3d2f52]/10 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#3d2f52]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#3d2f52]">
+              <ShieldCheck aria-hidden className="size-3.5" />
+              Platform administration
+            </span>
+            <h1 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+              Admin Overview
+            </h1>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+              {stats.pendingServices > 0
+                ? `${stats.pendingServices} ${stats.pendingServices === 1 ? "service needs" : "services need"} review before going live.`
+                : "All services have been reviewed — the marketplace is up to date."}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <div className="flex w-fit items-center gap-3 rounded-xl border border-[#c9a227]/25 bg-card/80 px-4 py-2.5 shadow-xs backdrop-blur-sm">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[#c9a227]/15 text-[#8a6d2f]">
+                <BadgeDollarSign aria-hidden className="size-4" />
+              </span>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Collected revenue
+                </p>
+                <p className="font-serif text-lg font-semibold text-burgundy">
+                  {formatBDT(statsData?.totalRevenue ?? 0)}
+                </p>
+              </div>
+            </div>
+            <Button
+              asChild
+              size="sm"
+              className="w-fit gap-1.5 bg-[#3d2f52] text-white hover:bg-[#3d2f52]/90"
+            >
+              <Link href="/dashboard/admin/services">
+                Review Services <ArrowRight aria-hidden className="size-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="w-fit gap-1.5 border-[#3d2f52]/30 text-[#3d2f52] hover:bg-[#efe9f2]"
-        >
-          <Link href="/dashboard/admin/services">
-            Review Services <ArrowRight aria-hidden className="size-4" />
-          </Link>
-        </Button>
       </div>
 
       {/* Stats */}
@@ -334,10 +367,18 @@ function AdminOverview() {
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-border shadow-xs">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base">
-              Users by Role
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="font-serif text-base">
+                Users by Role
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {stats.totalUsers} accounts on the platform
+              </CardDescription>
+            </div>
+            <span className="flex size-9 items-center justify-center rounded-lg bg-rose-tint text-burgundy">
+              <Users aria-hidden className="size-4" />
+            </span>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -368,10 +409,18 @@ function AdminOverview() {
         </Card>
 
         <Card className="border-border shadow-xs">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base">
-              Bookings by Status
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="font-serif text-base">
+                Bookings by Status
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {bookings.length} requests across all vendors
+              </CardDescription>
+            </div>
+            <span className="flex size-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <CalendarRange aria-hidden className="size-4" />
+            </span>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -402,10 +451,18 @@ function AdminOverview() {
         </Card>
 
         <Card className="border-border shadow-xs">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base">
-              Services by Status
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="font-serif text-base">
+                Services by Status
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {services.length} submitted listings
+              </CardDescription>
+            </div>
+            <span className="flex size-9 items-center justify-center rounded-lg bg-sage-tint text-[#4d5c44]">
+              <FolderOpen aria-hidden className="size-4" />
+            </span>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -484,16 +541,25 @@ function AdminOverview() {
                 return (
                   <div
                     key={service.id}
-                    className="rounded-lg border border-border p-3.5"
+                    className="rounded-xl border border-border bg-muted/20 p-3.5 transition-colors hover:border-rose-soft/70"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={service.images[0]}
+                        alt=""
+                        loading="lazy"
+                        className="size-12 shrink-0 rounded-lg border border-border object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">
                           {service.serviceName}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {vendor?.businessName ?? vendor?.name} ·{" "}
                           {service.category}
+                        </p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          Submitted {formatDate(service.createdAt)}
                         </p>
                       </div>
                       <ServiceStatusBadge
@@ -548,34 +614,40 @@ function AdminOverview() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
-              >
-                <Avatar className="size-9 border border-border">
-                  <AvatarImage src={user.image} alt={user.name} />
-                  <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
-                    {initials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{user.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    Joined {formatDate(user.joinedAt)}
-                  </p>
-                </div>
-                <span
-                  className={
-                    user.role === "vendor"
-                      ? "shrink-0 rounded-full bg-rose-tint px-2.5 py-0.5 text-xs font-medium text-burgundy"
-                      : "shrink-0 rounded-full bg-sage-tint px-2.5 py-0.5 text-xs font-medium text-[#4d5c44]"
-                  }
+            {recentUsers.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
+                No registrations yet.
+              </p>
+            ) : (
+              recentUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
                 >
-                  {user.role}
-                </span>
-              </div>
-            ))}
+                  <Avatar className="size-9 border border-border">
+                    <AvatarImage src={user.image} alt={user.name} />
+                    <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
+                      {initials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{user.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      Joined {formatDate(user.joinedAt)}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      user.role === "vendor"
+                        ? "shrink-0 rounded-full bg-rose-tint px-2.5 py-0.5 text-xs font-medium text-burgundy"
+                        : "shrink-0 rounded-full bg-sage-tint px-2.5 py-0.5 text-xs font-medium text-[#4d5c44]"
+                    }
+                  >
+                    {user.role}
+                  </span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -597,28 +669,34 @@ function AdminOverview() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentTransactions.map((t) => {
-              const vendor = t.vendor;
-              return (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {vendor?.businessName ?? vendor?.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(t.createdAt)} · {formatBDT(t.amount)}
-                    </p>
+            {recentTransactions.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
+                No payments recorded yet.
+              </p>
+            ) : (
+              recentTransactions.map((t) => {
+                const vendor = t.vendor;
+                return (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {vendor?.businessName ?? vendor?.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(t.createdAt)} · {formatBDT(t.amount)}
+                      </p>
+                    </div>
+                    <PaymentStatusBadge
+                      status={t.paymentStatus}
+                      className="shrink-0"
+                    />
                   </div>
-                  <PaymentStatusBadge
-                    status={t.paymentStatus}
-                    className="shrink-0"
-                  />
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </div>
@@ -630,31 +708,40 @@ function AdminOverview() {
         </h2>
         {/* Mobile: stacked cards */}
         <div className="space-y-3 md:hidden">
-          {recentBookingActivity.map((b) => {
-            const customer = b.customer;
-            const service = b.service;
-            return (
-              <div
-                key={b.id}
-                className="rounded-xl border border-border bg-card p-4 shadow-xs"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">
-                      {customer?.name ?? "—"}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {service?.serviceName ?? "—"}
-                    </p>
+          {recentBookingActivity.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border bg-card py-8 text-center text-xs text-muted-foreground">
+              No booking requests yet.
+            </p>
+          ) : (
+            recentBookingActivity.map((b) => {
+              const customer = b.customer;
+              const service = b.service;
+              return (
+                <div
+                  key={b.id}
+                  className="rounded-xl border border-border bg-card p-4 shadow-xs"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">
+                        {customer?.name ?? "—"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {service?.serviceName ?? "—"}
+                      </p>
+                    </div>
+                    <BookingStatusBadge
+                      status={b.status}
+                      className="shrink-0"
+                    />
                   </div>
-                  <BookingStatusBadge status={b.status} className="shrink-0" />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Event {formatDate(b.eventDate)}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Event {formatDate(b.eventDate)}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Desktop: table */}
@@ -680,25 +767,36 @@ function AdminOverview() {
               </tr>
             </thead>
             <tbody>
-              {recentBookingActivity.map((b) => {
-                const customer = b.customer;
-                const service = b.service;
-                return (
-                  <tr
-                    key={b.id}
-                    className="border-b border-border/60 last:border-0"
+              {recentBookingActivity.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-xs text-muted-foreground"
                   >
-                    <td className="px-4 py-3">{customer?.name ?? "—"}</td>
-                    <td className="max-w-52 truncate px-4 py-3">
-                      {service?.serviceName ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">{formatDate(b.eventDate)}</td>
-                    <td className="px-4 py-3">
-                      <BookingStatusBadge status={b.status} />
-                    </td>
-                  </tr>
-                );
-              })}
+                    No booking requests yet.
+                  </td>
+                </tr>
+              ) : (
+                recentBookingActivity.map((b) => {
+                  const customer = b.customer;
+                  const service = b.service;
+                  return (
+                    <tr
+                      key={b.id}
+                      className="border-b border-border/60 last:border-0"
+                    >
+                      <td className="px-4 py-3">{customer?.name ?? "—"}</td>
+                      <td className="max-w-52 truncate px-4 py-3">
+                        {service?.serviceName ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">{formatDate(b.eventDate)}</td>
+                      <td className="px-4 py-3">
+                        <BookingStatusBadge status={b.status} />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
