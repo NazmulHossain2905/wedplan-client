@@ -184,7 +184,7 @@ export function Navbar() {
               <Button
                 asChild
                 size="sm"
-                className="gap-1.5 rounded-full bg-linear-to-r from-burgundy to-burgundy-deep px-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="gap-1.5 rounded-full bg-linear-to-r from-burgundy to-burgundy-deep px-5 text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <Link href="/sign-up">
                   <UserPlus aria-hidden className="size-4" /> Get Started
@@ -304,7 +304,7 @@ export function Navbar() {
                     </Button>
                     <Button
                       asChild
-                      className="w-full gap-1.5 rounded-full bg-linear-to-r from-burgundy to-burgundy-deep shadow-sm"
+                      className="w-full gap-1.5 rounded-full bg-linear-to-r from-burgundy to-burgundy-deep text-white shadow-sm"
                     >
                       <Link
                         href="/sign-up"
