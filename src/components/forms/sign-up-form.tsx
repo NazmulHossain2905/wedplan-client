@@ -11,7 +11,7 @@ import { updateUser } from "@/lib/auth-client";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { fileToDataUrl, initials } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
-import { validatePassword } from "@/lib/validations";
+import { validatePassword, validateSignUp } from "@/lib/validations";
 import {
   Briefcase,
   Check,
@@ -111,10 +111,15 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    if (!pwChecks.valid) {
-      toast.error(
-        "Password must be at least 6 characters with one uppercase and one lowercase letter.",
-      );
+    const validationError = validateSignUp({
+      name,
+      email,
+      password,
+      role,
+      businessName: role === "vendor" ? businessName : undefined,
+    });
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
     setSubmitting(true);
