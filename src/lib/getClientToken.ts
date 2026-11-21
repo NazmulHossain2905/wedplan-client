@@ -9,7 +9,8 @@ export const getClientToken = async (): Promise<string | null> => {
   const { data, error } = await authClient.token();
 
   if (error) {
-    console.error("getClientToken:", error);
+    // No session (or an expired one) is normal for guests on public pages.
+    // Callers simply send the request without an Authorization header.
     return null;
   }
 
