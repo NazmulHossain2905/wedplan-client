@@ -4,7 +4,7 @@ import { PremiumBadge } from "@/components/shared/badges";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { dashboardHomeForRole } from "@/lib/constants";
 import { formatBDT } from "@/lib/helpers";
 import {
@@ -35,22 +35,37 @@ interface PaymentResult {
   activated: boolean;
 }
 
+type VerificationState = "verifying" | "succeeded" | "failed" | "no-session";
+
 export function PaymentSuccessView() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const { user } = useAuth();
 
   const [data, setData] = useState<PaymentResult | null>(null);
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState<VerificationState>(
+    sessionId ? "verifying" : "no-session",
+  );
 
   const shouldVerify = Boolean(user) && Boolean(sessionId);
+  const isVerifying = state === "verifying";
+  const succeeded = state === "succeeded";
 
-  // Keep asking the server until the webhook has finished processing.
+  // Keep asking the server until the webhook has finished processing. A 404
+  // (webhook not recorded yet) or a network/5xx error is still "verifying" —
+  // only a definitive rejection or exhausted retries count as a failure.
   useEffect(() => {
-    if (!shouldVerify || !sessionId) return;
+    if (!sessionId) {
+      setState("no-session");
+      return;
+    }
+    // The session may still be hydrating — stay in "verifying" until it is.
+    if (!shouldVerify) return;
 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20;
 
     async function verify() {
       try {
@@ -66,16 +81,39 @@ export function PaymentSuccessView() {
         };
 
         setData(mapped);
-        setDone(true);
 
-        if (mapped.status === "processing") {
-          timer = setTimeout(() => void verify(), 1500);
+        if (mapped.activated || mapped.status === "succeeded") {
+          setState("succeeded");
+          return;
         }
-      } catch {
+        if (
+          mapped.status === "failed" ||
+          mapped.status === "canceled" ||
+          mapped.status === "rejected"
+        ) {
+          setState("failed");
+          return;
+        }
+      } catch (error) {
         if (cancelled) return;
-        setData(null);
-        setDone(true);
+        // A bad session or forbidden user is a real failure; everything else
+        // (transaction not written yet, 5xx, offline) is still in progress.
+        if (
+          error instanceof ApiError &&
+          (error.status === 400 || error.status === 403)
+        ) {
+          setState("failed");
+          return;
+        }
       }
+
+      if (cancelled) return;
+      if (attempts >= MAX_ATTEMPTS) {
+        setState("failed");
+        return;
+      }
+      attempts += 1;
+      timer = setTimeout(() => void verify(), 1500);
     }
 
     void verify();
@@ -86,23 +124,21 @@ export function PaymentSuccessView() {
     };
   }, [shouldVerify, sessionId]);
 
-  const isLoading = shouldVerify && !done;
-  const activated = data?.activated ?? false;
   const notifiedRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (activated && !notifiedRef.current) {
+    if (succeeded && !notifiedRef.current) {
       notifiedRef.current = true;
       toast.success("Premium plan activated!", {
         description: "Your vendor account now has unlimited active services.",
       });
     }
-  }, [activated]);
+  }, [succeeded]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-rose-tint/60 via-background to-background px-4 py-16">
       <div className="w-full max-w-lg space-y-8 text-center">
-        {isLoading ? (
+        {isVerifying ? (
           <div className="flex flex-col items-center gap-4">
             <Loader2 aria-hidden className="size-10 animate-spin text-rose" />
             <p className="text-sm text-muted-foreground">
@@ -112,12 +148,12 @@ export function PaymentSuccessView() {
         ) : (
           <div
             className={`mx-auto flex size-20 items-center justify-center rounded-full shadow-sm ${
-              activated
+              succeeded
                 ? "bg-emerald-100 text-emerald-600"
                 : "bg-amber-100 text-amber-600"
             }`}
           >
-            {activated ? (
+            {succeeded ? (
               <CheckCircle2 aria-hidden className="size-10" />
             ) : (
               <XCircle aria-hidden className="size-10" />
@@ -125,27 +161,35 @@ export function PaymentSuccessView() {
           </div>
         )}
 
-        <div className="space-y-3">
-          <h1 className="font-serif text-3xl font-semibold text-foreground sm:text-4xl">
-            {activated ? "Payment Successful" : "Payment Not Completed"}
-          </h1>
-          <p className="leading-relaxed text-muted-foreground">
-            {activated
-              ? `Thank you${user ? `, ${user.name}` : ""}! Your Premium subscription is now active — it was unlocked by the verified payment event from the webhook, not by this page.`
-              : "We could not confirm this payment. If you completed it recently, refresh in a moment; otherwise the checkout may have been cancelled."}
-          </p>
-          {activated ? (
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <Crown aria-hidden className="size-4 text-[#c9a227]" />
-              <span className="text-sm font-medium text-foreground">
-                Premium Vendor
-              </span>
-              <PremiumBadge compact />
-            </div>
-          ) : null}
-        </div>
+        {isVerifying ? null : (
+          <div className="space-y-3">
+            <h1 className="font-serif text-3xl font-semibold text-foreground sm:text-4xl">
+              {succeeded
+                ? "Payment Successful"
+                : state === "failed"
+                  ? "Payment Not Completed"
+                  : "No Checkout Session"}
+            </h1>
+            <p className="leading-relaxed text-muted-foreground">
+              {succeeded
+                ? `Thank you${user ? `, ${user.name}` : ""}! Your Premium subscription is now active — it was unlocked by the verified payment event from the webhook, not by this page.`
+                : state === "failed"
+                  ? "We couldn't verify this payment. If you were charged, check your billing history before trying again — Premium is activated only by a verified payment event."
+                  : "No checkout session was found for this visit."}
+            </p>
+            {succeeded ? (
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <Crown aria-hidden className="size-4 text-[#c9a227]" />
+                <span className="text-sm font-medium text-foreground">
+                  Premium Vendor
+                </span>
+                <PremiumBadge compact />
+              </div>
+            ) : null}
+          </div>
+        )}
 
-        {data ? (
+        {data && !isVerifying ? (
           <Card className="border-border bg-card shadow-sm">
             <CardContent className="space-y-4 p-6 text-left">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -215,7 +259,7 @@ export function PaymentSuccessView() {
               </p>
             </CardContent>
           </Card>
-        ) : isLoading ? null : (
+        ) : isVerifying ? null : (
           <p className="rounded-lg border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
             No checkout session was found for this visit. Open your subscription
             page to see the current plan status and billing history.
