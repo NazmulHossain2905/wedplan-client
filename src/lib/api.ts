@@ -20,8 +20,22 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").re
 /** Routes handled by this Next.js app rather than by the Express server. */
 const LOCAL_PATHS = ["/api/upload"];
 
+/**
+ * Public Express routes need no JWT. Skipping the token lookup here avoids
+ * needless auth requests (and noisy errors) for guests browsing the site.
+ */
+const PUBLIC_PATHS = ["/api/services", "/api/vendors", "/api/subscription/plans"];
+
+function matches(path: string, prefixes: string[]): boolean {
+  return prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`) || path.startsWith(`${prefix}?`));
+}
+
 function isLocal(path: string): boolean {
-  return LOCAL_PATHS.some((prefix) => path.startsWith(prefix));
+  return matches(path, LOCAL_PATHS);
+}
+
+function isPublic(path: string): boolean {
+  return matches(path, PUBLIC_PATHS);
 }
 
 function fullUrl(path: string): string {
@@ -46,7 +60,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("Content-Type", "application/json");
   }
 
-  if (!isLocal(path)) {
+  if (!isLocal(path) && !isPublic(path)) {
     const authorization = await getClientToken();
     if (authorization) headers.set("Authorization", authorization);
   }
