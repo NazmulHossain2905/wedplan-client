@@ -63,10 +63,10 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
     if (mode === "create") {
       return Boolean(
         serviceName.trim() ||
-        description.trim() ||
-        price ||
-        location.trim() ||
-        images.length,
+          description.trim() ||
+          price ||
+          location.trim() ||
+          images.length,
       );
     }
     if (!service) return false;
@@ -115,36 +115,74 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
     setImages((prev) => [...prev, url]);
     setImageUrl("");
     setErrors((p) => ({ ...p, images: "" }));
-    toast.success("Image added.");
   };
 
-  const handleFileUpload = async (file: File | undefined) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file.");
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const maxImages = 6;
+    const remaining = maxImages - images.length;
+    if (remaining <= 0) {
+      toast.error("You can add up to 6 images per service.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image is too large (max 5 MB).");
-      return;
+
+    const chosen = Array.from(files);
+    const accepted = chosen.slice(0, remaining);
+    if (chosen.length > remaining) {
+      toast.error(`Only ${remaining} more image(s) can be added (6 maximum).`);
     }
+
+    // Validate every selected file before uploading any of them.
+    const valid: File[] = [];
+    for (const file of accepted) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name}: please choose an image file.`);
+      } else if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name}: image is too large (max 5 MB).`);
+      } else {
+        valid.push(file);
+      }
+    }
+    if (valid.length === 0) return;
+
     setUploading(true);
+    const firstIndex = images.length;
+
     try {
-      // Optimistic preview, then upload to image hosting (ImgBB when
-      // configured) through the authenticated server endpoint.
-      const preview = await fileToDataUrl(file);
-      setImages((prev) => [...prev, preview]);
+      // Show local previews immediately so the upload feels instant.
+      const previews = await Promise.all(valid.map(fileToDataUrl));
+      setImages((prev) => [...prev, ...previews]);
       setErrors((p) => ({ ...p, images: "" }));
-      const { url } = await api.uploadImage(file);
-      setImages((prev) => prev.map((img) => (img === preview ? url : img)));
-      toast.success("Image uploaded.");
-    } catch (error) {
-      setImages((prev) => prev.filter((img) => !img.startsWith("data:")));
-      toast.error(
-        error instanceof ApiError
-          ? error.message
-          : "Could not upload the image. Try a URL instead.",
+
+      // Upload all selected images together; each result replaces its preview.
+      const results = await Promise.allSettled(
+        valid.map((file) => api.uploadImage(file)),
       );
+
+      const failed = results.flatMap((result, i) =>
+        result.status === "rejected" ? [firstIndex + i] : [],
+      );
+      setImages((prev) => {
+        const next = [...prev];
+        results.forEach((result, i) => {
+          if (result.status === "fulfilled") {
+            next[firstIndex + i] = result.value.url;
+          }
+        });
+        return next.filter((_, i) => !failed.includes(i));
+      });
+
+      // Only errors are announced — a successful upload shows its thumbnail.
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          toast.error(
+            result.reason instanceof ApiError
+              ? result.reason.message
+              : `Could not upload ${valid[i].name}. Try a URL instead.`,
+          );
+        }
+      });
     } finally {
       setUploading(false);
     }
@@ -152,7 +190,8 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    if (!user) return;
+    // Enter key can submit the form even while the button is disabled.
+    if (!user || uploading || submitting) return;
     const validationError = validateService({
       serviceName,
       category,
@@ -415,17 +454,22 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
                 id="service-image-upload"
                 type="file"
                 accept="image/*"
+                multiple
+                disabled={uploading}
                 className="sr-only"
-                onChange={(e) => void handleFileUpload(e.target.files?.[0])}
+                onChange={(e) => {
+                  void handleFileUpload(e.target.files);
+                  e.target.value = "";
+                }}
               />
             </div>
             {errors.images ? (
               <p className="text-xs text-destructive">{errors.images}</p>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              Add up to 6 images — the first one becomes the cover photo.
-              Uploads are hosted on ImgBB (or a compatible image host configured
-              on the server).
+              Add up to 6 images — select several files at once. The first one
+              becomes the cover photo. Uploads are hosted on ImgBB (or a
+              compatible image host configured on the server).
             </p>
           </div>
         </div>
@@ -492,13 +536,17 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
             <Button
               type="submit"
               size="lg"
-              disabled={submitting}
+              disabled={submitting || uploading}
               className="w-full"
             >
               {submitting ? (
                 <>
+                  <Loader2 aria-hidden className="size-4 animate-spin" /> Saving…
+                </>
+              ) : uploading ? (
+                <>
                   <Loader2 aria-hidden className="size-4 animate-spin" />{" "}
-                  Saving…
+                  Uploading images…
                 </>
               ) : mode === "create" ? (
                 "Submit for Review"
