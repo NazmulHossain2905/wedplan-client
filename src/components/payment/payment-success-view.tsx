@@ -44,7 +44,7 @@ export function PaymentSuccessView() {
 
   const [data, setData] = useState<PaymentResult | null>(null);
   const [state, setState] = useState<VerificationState>(
-    sessionId ? "verifying" : "no-session",
+    sessionId && user ? "verifying" : "no-session",
   );
 
   const shouldVerify = Boolean(user) && Boolean(sessionId);
@@ -72,10 +72,16 @@ export function PaymentSuccessView() {
         const result = await api.subscriptionStatus(sessionId!);
         if (cancelled) return;
 
+        const transaction = result.transaction;
+        if (!transaction) {
+          setState("failed");
+          return;
+        }
+
         const mapped: PaymentResult = {
-          status: result.transaction.paymentStatus,
-          amount: result.transaction.amount,
-          currency: result.transaction.currency ?? "BDT",
+          status: transaction.paymentStatus,
+          amount: transaction.amount,
+          currency: transaction.currency ?? "BDT",
           plan: result.plan,
           activated: result.activated,
         };

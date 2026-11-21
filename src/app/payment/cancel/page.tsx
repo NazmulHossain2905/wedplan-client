@@ -1,4 +1,6 @@
 import { PaymentCancelView } from "@/components/payment/payment-cancel-view";
+import { getActiveUser } from "@/server/guards";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -7,7 +9,10 @@ export const metadata = {
   description: "Your WedPlan Premium upgrade was cancelled.",
 };
 
-export default function PaymentCancelPage() {
+export default async function PaymentCancelPage() {
+  const user = await getActiveUser();
+  if (!user) redirect("/sign-in?redirect=%2Fpayment%2Fcancel");
+
   return (
     <Suspense
       fallback={
