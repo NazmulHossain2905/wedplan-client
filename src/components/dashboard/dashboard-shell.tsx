@@ -28,8 +28,8 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Fragment, ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Fragment, ReactNode, useState } from "react";
 
 interface NavItem {
   href: string;
@@ -185,16 +185,13 @@ function RoleHeader({ role }: { role: string }) {
 }
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, hydrated } = useAuth();
-  const router = useRouter();
+  const { user, hydrated } = useAuth();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      router.replace(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
-    }
-  }, [hydrated, isAuthenticated, router, pathname]);
+  // Auth and role checks are handled by the server layouts. A client-side
+  // redirect here races with session hydration and caused a Sign In <-> dashboard
+  // redirect loop, so it was removed.
 
   // Breadcrumbs derived from the path
   const segments = pathname.split("/").filter(Boolean);

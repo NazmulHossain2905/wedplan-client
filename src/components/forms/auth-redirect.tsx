@@ -2,36 +2,20 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth-client";
-import { dashboardHomeForRole } from "@/lib/constants";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 /**
- * Wraps the sign-in / sign-up forms: authenticated users are bounced to their
- * dashboard instead of seeing the auth forms again.
+ * Waits for the session before rendering the sign-in / sign-up form so it does
+ * not flash for a moment for signed-in visitors.
+ *
+ * It intentionally does NOT redirect logged-in users away from the form.
+ * Server layouts already enforce auth/roles; adding a client redirect here
+ * caused a redirect loop with the dashboard guards after sign-in.
  */
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
-  const { data: session, isPending } = useSession();
-  const user = session?.user;
-  const role = user?.role as string | undefined;
-  const isAuthenticated = Boolean(user) && !user?.isBlocked;
+  const { isPending } = useSession();
 
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    router.replace(dashboardHomeForRole(role ?? "customer"));
-  }, [isAuthenticated, role, router]);
-
-  // Wait for the session before deciding: rendering the form while the
-  // session is still loading either flashes it for signed-in users or starts
-  // a redundant redirect.
-  if (session === undefined || isPending) {
+  if (isPending) {
     return <AuthRedirectSkeleton message="Checking your session…" />;
-  }
-
-  if (isAuthenticated) {
-    return <AuthRedirectSkeleton message="Taking you to your dashboard…" />;
   }
 
   return <>{children}</>;

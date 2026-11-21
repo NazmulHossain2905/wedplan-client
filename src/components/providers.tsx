@@ -2,7 +2,6 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
-import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -51,30 +50,15 @@ export function Providers({ children }: { children: ReactNode }) {
 export function useRoleGuard(
   allowedRole: "customer" | "vendor" | "admin" | "any",
 ) {
-  const { user, isAuthenticated, hydrated } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { user, hydrated } = useAuth();
   const [checked, setChecked] = useState(false);
 
+  // The server layouts are the real guard. Client-side redirects here raced
+  // with session hydration and caused a Sign In <-> dashboard loop, so this
+  // effect only decides when the page is ready to render.
   useEffect(() => {
-    if (!hydrated) return;
-    if (!isAuthenticated) {
-      router.replace(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    if (allowedRole !== "any" && user && user.role !== allowedRole) {
-      const home =
-        user.role === "admin"
-          ? "/dashboard/admin"
-          : user.role === "vendor"
-            ? "/dashboard/vendor"
-            : "/dashboard/customer";
-      toast.error("You are not allowed to access that dashboard.");
-      router.replace(home);
-      return;
-    }
-    setChecked(true);
-  }, [hydrated, isAuthenticated, user, allowedRole, router, pathname]);
+    if (hydrated) setChecked(true);
+  }, [hydrated]);
 
   return {
     user,
