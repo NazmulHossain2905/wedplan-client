@@ -6,6 +6,7 @@ import { ServiceCard } from "@/components/services/service-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import {
   api,
@@ -22,7 +23,7 @@ import {
   Heart,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function CustomerOverviewPage() {
   return (
@@ -45,8 +46,11 @@ function CustomerOverview() {
   const [allBookings, setAllBookings] = useState<BookingWithDetails[]>([]);
   const [statsData, setStatsData] = useState<CustomerStats | null>(null);
   const [serviceList, setServiceList] = useState<ServiceWithVendor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   // Bumped after a booking is cancelled so the overview reloads.
   const [reloadKey, setReloadKey] = useState(0);
+  // Only show skeletons for the first load, not on quiet reloads.
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     if (user?.role !== "customer") return;
@@ -54,6 +58,7 @@ function CustomerOverview() {
     let cancelled = false;
 
     async function loadOverview() {
+      if (!hasLoadedOnce.current) setIsLoading(true);
       try {
         const [bookingsRes, statsRes, servicesRes] = await Promise.all([
           api.bookings(),
@@ -66,6 +71,11 @@ function CustomerOverview() {
         setServiceList(servicesRes.services);
       } catch {
         // Leave whatever is already on screen.
+      } finally {
+        if (!cancelled) {
+          hasLoadedOnce.current = true;
+          setIsLoading(false);
+        }
       }
     }
 
@@ -126,7 +136,7 @@ function CustomerOverview() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" aria-busy={isLoading}>
       {/* Greeting */}
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-gradient-to-r from-rose-tint via-card to-card p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -134,11 +144,15 @@ function CustomerOverview() {
           <h1 className="mt-0.5 font-serif text-2xl font-semibold text-foreground sm:text-3xl">
             {user?.name}
           </h1>
-          <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
-            {counts.pending > 0
-              ? `You have ${counts.pending} booking ${counts.pending === 1 ? "request" : "requests"} awaiting a vendor response.`
-              : "Everything is up to date — time to discover your next vendor."}
-          </p>
+          {isLoading ? (
+            <Skeleton className="mt-2 h-4 w-64 max-w-full" />
+          ) : (
+            <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
+              {counts.pending > 0
+                ? `You have ${counts.pending} booking ${counts.pending === 1 ? "request" : "requests"} awaiting a vendor response.`
+                : "Everything is up to date — time to discover your next vendor."}
+            </p>
+          )}
         </div>
         <Button asChild className="gap-2 shadow-sm">
           <Link href="/services">
@@ -148,32 +162,49 @@ function CustomerOverview() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total Booking Requests"
-          value={counts.total}
-          icon={CalendarCheck2}
-          tone="default"
-        />
-        <StatCard
-          title="Pending Bookings"
-          value={counts.pending}
-          icon={CalendarClock}
-          tone="amber"
-        />
-        <StatCard
-          title="Accepted Bookings"
-          value={counts.accepted}
-          icon={CheckCircle2}
-          tone="sage"
-        />
-        <StatCard
-          title="Rejected Bookings"
-          value={counts.rejected}
-          icon={CalendarX2}
-          tone="red"
-        />
-      </div>
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:p-5"
+            >
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-28 max-w-full" />
+                <Skeleton className="h-7 w-12" />
+              </div>
+              <Skeleton className="size-11 shrink-0 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Total Booking Requests"
+            value={counts.total}
+            icon={CalendarCheck2}
+            tone="default"
+          />
+          <StatCard
+            title="Pending Bookings"
+            value={counts.pending}
+            icon={CalendarClock}
+            tone="amber"
+          />
+          <StatCard
+            title="Accepted Bookings"
+            value={counts.accepted}
+            icon={CheckCircle2}
+            tone="sage"
+          />
+          <StatCard
+            title="Rejected Bookings"
+            value={counts.rejected}
+            icon={CalendarX2}
+            tone="red"
+          />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent bookings */}
@@ -196,7 +227,13 @@ function CustomerOverview() {
               </Link>
             </Button>
           </div>
-          {recent.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <BookingCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : recent.length === 0 ? (
             <EmptyState
               icon={<Heart aria-hidden />}
               title="No booking requests yet"
@@ -224,7 +261,19 @@ function CustomerOverview() {
             Status Breakdown
           </h2>
           <div className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-xs">
-            {counts.total === 0 ? (
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-3 w-full rounded-full" />
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-6" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : counts.total === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Your booking summary will appear here once you send your first
                 request.
@@ -273,7 +322,18 @@ function CustomerOverview() {
       </div>
 
       {/* Recommended */}
-      {recommended.length > 0 ? (
+      {isLoading ? (
+        <section aria-label="Recommended services" className="space-y-4">
+          <h2 className="font-serif text-xl font-semibold text-foreground">
+            Recommended for You
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <ServiceCardSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+      ) : recommended.length > 0 ? (
         <section aria-label="Recommended services" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-xl font-semibold text-foreground">
@@ -304,3 +364,43 @@ function CustomerOverview() {
     </div>
   );
 }
+
+/** Placeholder that mirrors the shape of `CustomerBookingCard`. */
+function BookingCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+      <Skeleton className="h-32 w-full shrink-0 rounded-lg sm:h-24 sm:w-32" />
+      <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-5 w-40 max-w-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-32 max-w-full" />
+        <Skeleton className="h-4 w-56 max-w-full" />
+        <Skeleton className="h-3 w-40 max-w-full" />
+      </div>
+      <div className="flex shrink-0 flex-row gap-2 sm:flex-col">
+        <Skeleton className="h-10 flex-1 rounded-full sm:w-40" />
+        <Skeleton className="h-10 flex-1 rounded-full sm:w-40" />
+      </div>
+    </div>
+  );
+}
+
+/** Placeholder that mirrors the shape of `ServiceCard`. */
+function ServiceCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+      <Skeleton className="h-48 w-full rounded-none" />
+      <div className="space-y-3 p-4">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="flex items-center justify-between pt-2">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-9 w-24 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
