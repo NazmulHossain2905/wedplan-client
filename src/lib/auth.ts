@@ -4,7 +4,13 @@ import { betterAuth } from "better-auth";
 import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(env.MONGODB_URI);
+const client = new MongoClient(env.MONGODB_URI, {
+  // Same serverless-friendly limits as wedplan-server: a small pool per
+  // instance keeps us under the Atlas connection limit, and fail fast rather
+  // than hanging 30 seconds (which leaves a dead topology behind).
+  maxPoolSize: 5,
+  serverSelectionTimeoutMS: 3000,
+});
 const db = client.db(env.DB_NAME);
 
 /** Google sign-in is only registered when both credentials are configured. */
