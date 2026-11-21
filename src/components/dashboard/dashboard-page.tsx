@@ -12,7 +12,7 @@ export function DashboardPage({
   role,
   children,
 }: {
-  role: "customer" | "vendor" | "admin";
+  role: "customer" | "vendor" | "admin" | "any";
   children: React.ReactNode;
 }) {
   const { ready } = useRoleGuard(role);
