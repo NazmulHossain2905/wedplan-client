@@ -34,7 +34,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <BlockedUserWatcher />
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="bottom-right" richColors closeButton />
       </AuthProvider>
     </ThemeProvider>
   );
