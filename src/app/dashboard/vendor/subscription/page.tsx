@@ -3,6 +3,7 @@
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { FREE_PLAN, PREMIUM_PLAN, PREMIUM_PRICE_BDT } from "@/lib/constants";
@@ -43,6 +44,7 @@ function VendorSubscription() {
 
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
@@ -61,6 +63,9 @@ function VendorSubscription() {
         setTransactions(transactionsRes.transactions);
       } catch {
         // Leave whatever is already on screen.
+      } finally {
+        // A failed request still finishes loading — never leave the skeleton up.
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -98,17 +103,30 @@ function VendorSubscription() {
     }
   };
 
+  const header = (
+    <div>
+      <h1 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+        Subscription
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Manage your WedPlan vendor plan. Upgrade anytime to unlock unlimited
+        services and a Premium badge.
+      </p>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        {header}
+        <SubscriptionSkeleton />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
-          Subscription
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your WedPlan vendor plan. Upgrade anytime to unlock unlimited
-          services and a Premium badge.
-        </p>
-      </div>
+      {header}
 
       {/* Current plan status */}
       <div
@@ -391,6 +409,70 @@ function VendorSubscription() {
             </table>
           </div>
         )}
+      </section>
+    </div>
+  );
+}
+
+/** Mirrors the subscription layout so the page does not flash plan/billing data. */
+function SubscriptionSkeleton() {
+  return (
+    <div className="space-y-8" aria-busy="true" aria-label="Loading subscription">
+      {/* Current plan status */}
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <Skeleton className="size-12 shrink-0 rounded-lg" />
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+        </div>
+        <Skeleton className="h-11 w-44 shrink-0 rounded-md" />
+      </div>
+
+      {/* Pricing cards */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4 rounded-xl border border-border bg-card p-7 shadow-xs">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-10 w-28" />
+          <div className="space-y-3 pt-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-4 w-3/4" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4 rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-8">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-10 w-32" />
+          <div className="space-y-3 pt-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-4 w-2/3" />
+            ))}
+          </div>
+          <Skeleton className="mt-7 h-11 w-full rounded-md" />
+        </div>
+      </div>
+
+      {/* Billing history */}
+      <section className="space-y-3" aria-label="Loading billing history">
+        <Skeleton className="h-6 w-44" />
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <Skeleton className="h-10 w-full rounded-none bg-muted/50" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-4 border-t border-border/60 px-4 py-3"
+            >
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
