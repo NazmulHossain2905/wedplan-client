@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { ServiceForm } from "@/components/forms/service-form";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FREE_PLAN, PREMIUM_PLAN } from "@/lib/constants";
 import type { Service } from "@/types";
 
@@ -41,6 +42,7 @@ function AddService() {
 
   const [stats, setStats] = React.useState<VendorStats | null>(null);
   const [myServices, setMyServices] = React.useState<Service[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (user?.role !== "vendor") return;
@@ -58,6 +60,9 @@ function AddService() {
         setMyServices(servicesRes.services);
       } catch {
         // Leave the page usable even if the summary fails to load.
+      } finally {
+        // A failed request still finishes loading — never leave the skeleton up.
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -76,6 +81,8 @@ function AddService() {
   const limitReached =
     (stats?.currentPlan ?? user?.subscriptionPlan) === "free" &&
     usedCount >= FREE_PLAN.maxActiveServices;
+
+  if (loading) return <AddServiceSkeleton />;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -236,6 +243,53 @@ function AddService() {
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+/** Simple placeholder shown while the vendor's plan usage is loading. */
+function AddServiceSkeleton() {
+  return (
+    <div
+      className="mx-auto w-full max-w-6xl space-y-6"
+      aria-busy="true"
+      aria-label="Loading add service form"
+    >
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-xs sm:p-8">
+        <Skeleton className="h-8 w-40" />
+        <div className="mt-6 space-y-3">
+          <Skeleton className="h-8 w-64 max-w-full" />
+          <Skeleton className="h-4 w-full max-w-xl" />
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-start gap-3 rounded-xl border border-border bg-card p-4"
+          >
+            <Skeleton className="size-9 shrink-0 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-5 rounded-2xl border border-border bg-card/70 p-5 sm:p-8">
+        <Skeleton className="h-6 w-44" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+        </div>
+        <Skeleton className="h-24 w-full" />
+      </div>
     </div>
   );
 }
