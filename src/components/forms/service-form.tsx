@@ -21,7 +21,7 @@ import { validateService } from "@/lib/validations";
 import type { Service, ServiceInput } from "@/types";
 import { ImagePlus, Info, LinkIcon, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { SyntheticEvent, useEffect, useMemo, useState } from "react";
+import { SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const COMMON_LOCATIONS = [
@@ -45,6 +45,7 @@ interface ServiceFormProps {
 export function ServiceForm({ mode, service }: ServiceFormProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const serviceNameRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   const [serviceName, setServiceName] = useState(service?.serviceName ?? "");
@@ -57,6 +58,22 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
   const [isAvailable, setIsAvailable] = useState(service?.isAvailable ?? true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // On the Add Service page, put the cursor in the first field and bring the
+  // form into view. Focus first without scrolling so the explicit scroll
+  // lands on the field area instead of the browser's minimal scroll.
+  // Edit mode leaves the user's scroll position untouched.
+  useEffect(() => {
+    if (mode !== "create") return;
+    // Defer one frame so Next.js finishes its navigation scroll-to-top first.
+    const frame = requestAnimationFrame(() => {
+      const input = serviceNameRef.current;
+      if (!input) return;
+      input.focus({ preventScroll: true });
+      input.scrollIntoView({ block: "center" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mode]);
 
   // Warn before leaving with unsaved edits (values differ from the saved service).
   const dirty = useMemo(() => {
@@ -277,6 +294,7 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
               Service Name <span className="text-destructive">*</span>
             </Label>
             <Input
+              ref={serviceNameRef}
               id="service-name"
               placeholder="e.g. Signature Wedding Photography"
               value={serviceName}
