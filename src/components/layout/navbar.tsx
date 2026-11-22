@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -128,7 +128,6 @@ function MobileNavLink({
 
 export function Navbar() {
   const { isAuthenticated, hydrated, user, signOut } = useAuth();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -179,14 +178,16 @@ export function Navbar() {
                 size="sm"
                 className="rounded-full px-4 text-foreground/80 hover:bg-rose-tint hover:text-burgundy"
               >
-                <Link href="/sign-in">Sign In</Link>
+                <Link href="/sign-in" prefetch={false}>
+                  Sign In
+                </Link>
               </Button>
               <Button
                 asChild
                 size="sm"
                 className="gap-1.5 rounded-full bg-linear-to-r from-burgundy to-burgundy-deep px-5 text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
-                <Link href="/sign-up">
+                <Link href="/sign-up" prefetch={false}>
                   <UserPlus aria-hidden className="size-4" /> Get Started
                 </Link>
               </Button>
@@ -271,7 +272,10 @@ export function Navbar() {
                           await signOut();
                           setMobileOpen(false);
                           toast.success("You have been signed out.");
-                          router.push("/");
+                          // Discard the Router Cache so a cached signed-in
+                          // redirect from /sign-up cannot replay after logout.
+                          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+                          window.location.assign("/");
                         })();
                       }}
                     >
@@ -297,6 +301,7 @@ export function Navbar() {
                     >
                       <Link
                         href="/sign-in"
+                        prefetch={false}
                         onClick={() => setMobileOpen(false)}
                       >
                         Sign In
@@ -308,6 +313,7 @@ export function Navbar() {
                     >
                       <Link
                         href="/sign-up"
+                        prefetch={false}
                         onClick={() => setMobileOpen(false)}
                       >
                         <UserPlus aria-hidden className="size-4" /> Get Started

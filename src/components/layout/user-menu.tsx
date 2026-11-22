@@ -88,7 +88,10 @@ export function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
               await signOut();
               onNavigate?.();
               toast.success("You have been signed out.");
-              router.replace("/");
+              // Full reload: a client-side replace keeps Next's Router Cache,
+              // which can replay a stale signed-in redirect from /sign-up.
+              // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+              window.location.assign("/");
             })();
           }}
         >

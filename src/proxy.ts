@@ -33,6 +33,13 @@ function isPrivateRoute(pathname: string): boolean {
   return /^\/services\/[^/]+\/?$/.test(pathname);
 }
 
+/** Auth redirects depend on the current session, so never cache them. */
+function redirectTo(request: NextRequest, path: string): NextResponse {
+  const response = NextResponse.redirect(new URL(path, request.url));
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
+
 function toSignIn(request: NextRequest, error?: string): NextResponse {
   const url = new URL("/sign-in", request.url);
   if (error) {
@@ -43,7 +50,7 @@ function toSignIn(request: NextRequest, error?: string): NextResponse {
     const { pathname, search } = request.nextUrl;
     url.searchParams.set("redirect", `${pathname}${search}`);
   }
-  return NextResponse.redirect(url);
+  return redirectTo(request, `${url.pathname}${url.search}`);
 }
 
 /**
@@ -73,12 +80,12 @@ export async function proxy(request: NextRequest) {
     const home = homeFor(user.role);
 
     // Signed-in users do not need the sign-in / sign-up forms.
-    if (isAuthPage) return NextResponse.redirect(new URL(home, request.url));
+    if (isAuthPage) return redirectTo(request, home);
 
     // Unauthenticated requests are handled below; for signed-in users the
     // dashboard root is only a router to the role-specific home.
     if (pathname === "/dashboard" || pathname === "/dashboard/") {
-      return NextResponse.redirect(new URL(home, request.url));
+      return redirectTo(request, home);
     }
 
     // A user in the wrong role area is sent back to their own dashboard.
@@ -86,7 +93,7 @@ export async function proxy(request: NextRequest) {
       (s) => pathname === s.prefix || pathname.startsWith(`${s.prefix}/`),
     );
     if (scope && user.role !== scope.role) {
-      return NextResponse.redirect(new URL(home, request.url));
+      return redirectTo(request, home);
     }
 
     return NextResponse.next();
