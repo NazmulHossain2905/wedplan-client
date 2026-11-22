@@ -4,7 +4,7 @@
 
 WedPlan is a role-based wedding planning marketplace. Customers discover wedding services and send booking requests; vendors publish and manage services, handle bookings and upgrade to Premium; admins review services, manage users and monitor transactions. This repository contains the Next.js 16 frontend. Authentication and session data live here (Better Auth); business data lives in the companion `wedplan-server` Express API.
 
-## Features
+## Important Features
 
 - Public home page, service catalogue with search/filter/sort, and private service details
 - Better Auth email/password and Google sign-in, with short-lived JWTs for the Express API
@@ -16,7 +16,7 @@ WedPlan is a role-based wedding planning marketplace. Customers discover wedding
 - Optimized remote images via `next/image` with lazy loading and responsive sizes
 - Responsive wedding-themed UI built with ShadCN, Tailwind 4, Recharts and Motion
 
-## Tech Stack
+## Technology Stack
 
 Next.js 16 (App Router, TypeScript), React 19, Better Auth 1.7 with MongoDB adapter, Tailwind CSS 4, ShadCN, Recharts, Framer Motion, sonner, lucide-react. Server-side image optimization is handled by `next/image`.
 
@@ -27,6 +27,8 @@ Prerequisites:
 - Node.js 20+ and npm
 - A MongoDB database shared with the server
 - The companion `wedplan-server` API running locally (port 5000 by default)
+
+### How to Run the Project Locally
 
 Clone the repo, install dependencies, create `.env` from `.env.example`, fill in the secrets, then run `npm run dev`. The app is available at `http://localhost:3000`.
 
@@ -116,11 +118,14 @@ Start `wedplan-server` (`npm start`, port 5000) alongside the client; the JWT is
 
 ## Live Demo
 
+### Live Website Link
+
 https://wedplan-bd.vercel.app/
 
 ## Related Repository
 
-- Server (Express API): https://github.com/NazmulHossain2905/wedplan-server
+- Client repository: https://github.com/NazmulHossain2905/wedplan-client
+- Server repository (Express API): https://github.com/NazmulHossain2905/wedplan-server
 - API base URL: https://wedplan-api.vercel.app/
 
 ## 📄 License
