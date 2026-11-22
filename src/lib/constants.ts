@@ -28,7 +28,7 @@ export const FREE_PLAN = {
   currency: "৳ BDT",
   maxActiveServices: 3,
   features: [
-    "Maximum 3 active services",
+    "Up to 3 pending or approved services",
     "Basic vendor dashboard",
     "Booking request management",
     "Public vendor profile",
@@ -41,7 +41,7 @@ export const PREMIUM_PLAN = {
   currency: "৳ BDT",
   maxActiveServices: Infinity,
   features: [
-    "Unlimited Active Services",
+    "Unlimited Services",
     "Premium Vendor Badge",
     "All Free Plan Features",
   ],

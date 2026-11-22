@@ -33,6 +33,7 @@ export default function VendorSubscriptionPage() {
 type VendorStats = {
   totalServices: number;
   activeServices: number;
+  usedServiceSlots: number;
   pendingBookings: number;
   acceptedBookings: number;
   currentPlan: "free" | "premium";
@@ -171,9 +172,9 @@ function VendorSubscription() {
             <p className="mt-1 text-sm text-muted-foreground">
               {isPremium
                 ? stats?.planExpiresAt
-                  ? `Unlimited active services · Active until ${formatDate(stats.planExpiresAt)}`
-                  : "Unlimited active services"
-                : `Up to ${FREE_PLAN.maxActiveServices} active services · ৳${PREMIUM_PLAN.price.toLocaleString("en-IN")} per 30 days to upgrade`}
+                  ? `Unlimited services · Active until ${formatDate(stats.planExpiresAt)}`
+                  : "Unlimited services"
+                : `Up to ${FREE_PLAN.maxActiveServices} pending or approved services · ৳${PREMIUM_PLAN.price.toLocaleString("en-IN")} per 30 days to upgrade`}
             </p>
           </div>
         </div>

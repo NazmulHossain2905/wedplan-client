@@ -48,6 +48,7 @@ export default function VendorServicesPage() {
 type VendorStats = {
   totalServices: number;
   activeServices: number;
+  usedServiceSlots: number;
   pendingBookings: number;
   acceptedBookings: number;
   currentPlan: "free" | "premium";
@@ -97,9 +98,13 @@ function VendorServices() {
     };
   }, [user, reloadKey]);
 
-  const activeCount =
-    stats?.activeServices ??
-    myServices.filter((s) => s.status === "approved" && s.isAvailable).length;
+  // Pending and approved services both consume a Free-plan slot; rejected
+  // (and archived) services do not.
+  const usedCount =
+    stats?.usedServiceSlots ??
+    myServices.filter(
+      (s) => s.status === "pending" || s.status === "approved",
+    ).length;
   const isPremium =
     (stats?.currentPlan ?? user?.subscriptionPlan) === "premium";
 
@@ -142,7 +147,7 @@ function VendorServices() {
           : "Could not update availability.";
       toast.error(message, {
         description: message.includes("Free plan")
-          ? "Upgrade to Premium for unlimited active services."
+          ? "Upgrade to Premium for unlimited services."
           : undefined,
         action: message.includes("Free plan")
           ? {
@@ -188,10 +193,9 @@ function VendorServices() {
           <p className="mt-1 text-sm text-muted-foreground">
             {myServices.length}{" "}
             {myServices.length === 1 ? "service" : "services"} total ·{" "}
-            {activeCount} active
-            {!isPremium
-              ? ` (Free plan limit: ${FREE_PLAN.maxActiveServices})`
-              : ""}
+            {isPremium
+              ? `${usedCount} submitted or approved`
+              : `${usedCount}/${FREE_PLAN.maxActiveServices} on Free plan`}
           </p>
         </div>
         <Button asChild className="gap-1.5 shadow-sm">

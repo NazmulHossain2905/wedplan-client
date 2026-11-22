@@ -29,6 +29,7 @@ export default function AddServicePage() {
 type VendorStats = {
   totalServices: number;
   activeServices: number;
+  usedServiceSlots: number;
   pendingBookings: number;
   acceptedBookings: number;
   currentPlan: "free" | "premium";
@@ -67,12 +68,14 @@ function AddService() {
     };
   }, [user]);
 
-  const activeCount =
-    stats?.activeServices ??
-    myServices.filter((s) => s.status === "approved" && s.isAvailable).length;
+  const usedCount =
+    stats?.usedServiceSlots ??
+    myServices.filter(
+      (s) => s.status === "pending" || s.status === "approved",
+    ).length;
   const limitReached =
     (stats?.currentPlan ?? user?.subscriptionPlan) === "free" &&
-    activeCount >= FREE_PLAN.maxActiveServices;
+    usedCount >= FREE_PLAN.maxActiveServices;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -110,7 +113,7 @@ function AddService() {
               <Sparkles aria-hidden className="size-3.5 text-[#c9a227]" />
               {stats?.currentPlan === "premium"
                 ? "Premium · Unlimited listings"
-                : `Free plan · ${activeCount}/${FREE_PLAN.maxActiveServices} active`}
+                : `Free plan · ${usedCount}/${FREE_PLAN.maxActiveServices} services`}
             </span>
           </div>
         </div>
@@ -126,10 +129,10 @@ function AddService() {
               You&apos;ve reached the Free plan limit
             </h2>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-amber-800/85">
-              Your Free plan allows up to {FREE_PLAN.maxActiveServices} active
-              services, and you currently have {activeCount}. To publish more,
-              deactivate an existing service or upgrade to Premium for unlimited
-              listings.
+              Your Free plan allows up to {FREE_PLAN.maxActiveServices} pending
+              or approved services, and you currently have {usedCount}. Rejected
+              services don&apos;t count — delete one or upgrade to Premium for
+              unlimited listings.
             </p>
           </div>
 

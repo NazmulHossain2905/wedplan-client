@@ -40,6 +40,7 @@ export default function VendorOverviewPage() {
 type VendorStats = {
   totalServices: number;
   activeServices: number;
+  usedServiceSlots: number;
   pendingBookings: number;
   acceptedBookings: number;
   currentPlan: "free" | "premium";
@@ -86,8 +87,9 @@ function VendorOverview() {
 
   const pendingBookings = myBookings.filter((b) => b.status === "pending");
   const isPremium = stats?.currentPlan === "premium";
-  const activeCount = stats?.activeServices ?? 0;
-  const limitReached = !isPremium && activeCount >= FREE_PLAN.maxActiveServices;
+  // Pending and approved services both consume a Free-plan slot.
+  const usedCount = stats?.usedServiceSlots ?? 0;
+  const limitReached = !isPremium && usedCount >= FREE_PLAN.maxActiveServices;
 
   const recentBookings = myBookings.slice(0, 3);
   const recentServices = myServices.slice(0, 3);
@@ -159,14 +161,14 @@ function VendorOverview() {
           tone="default"
         />
         <StatCard
-          title="Active Services"
-          value={activeCount}
+          title="Plan Services Used"
+          value={usedCount}
           icon={BadgeCheck}
           tone="sage"
           hint={
             isPremium
               ? "Unlimited with Premium"
-              : `${activeCount}/${FREE_PLAN.maxActiveServices} on Free plan`
+              : `${usedCount}/${FREE_PLAN.maxActiveServices} on Free plan`
           }
         />
         <StatCard
@@ -202,11 +204,11 @@ function VendorOverview() {
             <div>
               <p className="font-medium text-amber-900">
                 You&apos;ve reached the Free plan limit (
-                {FREE_PLAN.maxActiveServices} active services)
+                {FREE_PLAN.maxActiveServices} pending or approved services)
               </p>
               <p className="mt-0.5 text-sm text-amber-800/80">
-                Upgrade to Premium to publish unlimited services and get a
-                Premium vendor badge.
+                Rejected services free up a slot. Upgrade to Premium for
+                unlimited services and a Premium vendor badge.
               </p>
             </div>
           </div>

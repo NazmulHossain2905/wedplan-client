@@ -543,9 +543,10 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
                 Free plan reminder
               </p>
               <p className="mt-1 text-xs leading-relaxed text-amber-800/85">
-                Free vendors can keep up to {FREE_PLAN.maxActiveServices} active
-                (approved + available) services. Toggle availability off to free
-                a slot.
+                Free vendors can submit up to{" "}
+                {FREE_PLAN.maxActiveServices} pending or approved services.
+                Rejected services don&apos;t count and free a slot — toggling
+                availability does not change your plan usage.
               </p>
             </div>
           ) : null}

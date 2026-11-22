@@ -164,6 +164,8 @@ export const api = {
     request<{
       totalServices: number;
       activeServices: number;
+      /** Pending + approved services — the Free plan usage count. */
+      usedServiceSlots: number;
       pendingBookings: number;
       acceptedBookings: number;
       currentPlan: "free" | "premium";
