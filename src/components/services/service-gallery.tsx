@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { SafeImage } from "@/components/shared/safe-image";
 import { ChevronLeft, ChevronRight, Expand, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface ServiceGalleryProps {
@@ -35,10 +35,12 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
   return (
     <div className="space-y-3">
       <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-border bg-muted shadow-xs">
-        <img
+        <SafeImage
           src={safeImages[activeIndex]}
           alt={`${serviceName} — photo ${activeIndex + 1} of ${safeImages.length}`}
-          className="size-full cursor-zoom-in object-cover"
+          sizes="(max-width: 768px) 100vw, 800px"
+          quality={78}
+          className="cursor-zoom-in"
           onClick={() => setLightboxOpen(true)}
         />
         {safeImages.length > 1 ? (
@@ -89,17 +91,17 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
               aria-label={`Show image ${i + 1}`}
               onClick={() => setActiveIndex(i)}
               className={cn(
-                "aspect-[4/3] overflow-hidden rounded-lg border-2 transition-all",
+                "relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-all",
                 i === activeIndex
                   ? "border-burgundy shadow-sm"
                   : "border-transparent opacity-75 hover:opacity-100",
               )}
             >
-              <img
+              <SafeImage
                 src={src}
                 alt=""
-                loading="lazy"
-                className="size-full object-cover"
+                sizes="120px"
+                quality={55}
               />
             </button>
           ))}
@@ -111,10 +113,12 @@ export function ServiceGallery({ images, serviceName }: ServiceGalleryProps) {
           <DialogTitle className="sr-only">
             {serviceName} — full screen image
           </DialogTitle>
-          <div className="relative">
-            <img
+          <div className="relative h-[70vh]">
+            <SafeImage
               src={safeImages[activeIndex]}
               alt={`${serviceName} — enlarged photo`}
+              sizes="(max-width: 768px) 100vw, 896px"
+              quality={78}
               className="max-h-[80vh] w-full rounded-lg object-contain"
             />
             {safeImages.length > 1 ? (

@@ -36,13 +36,13 @@ export function ServiceCard({ service, vendor, className }: ServiceCardProps) {
         <SafeImage
           src={service.images[0]}
           alt={service.serviceName}
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="size-full transform-gpu object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-card/90 px-3 py-1 text-xs font-medium text-burgundy shadow-sm backdrop-blur-sm">
+        <span className="absolute left-3 top-3 rounded-full bg-white/95 dark:bg-card/95 px-3 py-1 text-xs font-medium text-burgundy shadow-sm">
           {service.category}
         </span>
         {service.rating > 0 ? (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 dark:bg-card/90 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 dark:bg-card/95 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm">
             <Star
               aria-hidden
               className="size-3.5 fill-amber-500 text-amber-500"
@@ -69,7 +69,12 @@ export function ServiceCard({ service, vendor, className }: ServiceCardProps) {
         {vendor ? (
           <div className="flex items-center gap-2.5">
             <Avatar className="size-8 border border-border">
-              <AvatarImage src={vendor.image} alt={vendor.name} />
+              <AvatarImage
+                src={vendor.image}
+                alt={vendor.name}
+                loading="lazy"
+                decoding="async"
+              />
               <AvatarFallback className="bg-rose-tint text-xs text-burgundy">
                 {initials(vendor.name)}
               </AvatarFallback>

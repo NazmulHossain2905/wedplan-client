@@ -7,6 +7,7 @@ import {
 } from "@/components/shared/badges";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -287,12 +288,13 @@ function VendorServices() {
               key={service.id}
               className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:p-5"
             >
-              <img
-                src={service.images[0]}
-                alt={service.serviceName}
-                loading="lazy"
-                className="h-36 w-full shrink-0 rounded-lg object-cover sm:h-28 sm:w-40"
-              />
+              <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-lg sm:h-28 sm:w-40">
+                <SafeImage
+                  src={service.images[0]}
+                  alt={service.serviceName}
+                  sizes="(max-width: 640px) 100vw, 160px"
+                />
+              </div>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="truncate font-serif text-lg font-semibold text-foreground">
@@ -387,12 +389,17 @@ function VendorServices() {
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-2">
                   {viewing.images.slice(0, 6).map((src, i) => (
-                    <img
+                    <div
                       key={i}
-                      src={src}
-                      alt={`${viewing.serviceName} image ${i + 1}`}
-                      className="aspect-[4/3] w-full rounded-lg border border-border object-cover"
-                    />
+                      className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-border"
+                    >
+                      <SafeImage
+                        src={src}
+                        alt={`${viewing.serviceName} image ${i + 1}`}
+                        sizes="(max-width: 640px) 33vw, 150px"
+                        quality={60}
+                      />
+                    </div>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
