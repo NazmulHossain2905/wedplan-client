@@ -31,7 +31,7 @@ import { useEffect, useState } from "react";
 
 export default function VendorOverviewPage() {
   return (
-    <DashboardPage role="vendor">
+    <DashboardPage>
       <VendorOverview />
     </DashboardPage>
   );

@@ -26,7 +26,7 @@ export default function EditServicePage({
 }) {
   const { id } = React.use(params);
   return (
-    <DashboardPage role="vendor">
+    <DashboardPage>
       <EditService id={id} />
     </DashboardPage>
   );

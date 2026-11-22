@@ -28,7 +28,7 @@ import { useEffect, useMemo, useState } from "react";
 
 export default function AdminTransactionsPage() {
   return (
-    <DashboardPage role="admin">
+    <DashboardPage>
       <AdminTransactions />
     </DashboardPage>
   );

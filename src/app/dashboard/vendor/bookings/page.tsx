@@ -33,7 +33,7 @@ const STATUS_TABS = [
 
 export default function VendorBookingsPage() {
   return (
-    <DashboardPage role="vendor">
+    <DashboardPage>
       <VendorBookings />
     </DashboardPage>
   );

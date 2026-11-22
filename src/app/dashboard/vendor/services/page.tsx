@@ -38,7 +38,7 @@ import { toast } from "sonner";
 
 export default function VendorServicesPage() {
   return (
-    <DashboardPage role="vendor">
+    <DashboardPage>
       <VendorServices />
     </DashboardPage>
   );

@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 export default function ProfileSettingsPage() {
   return (
-    <DashboardPage role="any">
+    <DashboardPage>
       <ProfileSettings />
     </DashboardPage>
   );

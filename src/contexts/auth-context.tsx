@@ -13,12 +13,11 @@ import {
 /**
  * Authentication context backed by Better Auth.
  *
- * Better Auth is the single source of truth for the session: this provider,
- * `<AuthRedirect>` and the dashboard guards all read the same `useSession`
- * state. Previously this provider used the demo API client's
- * `/api/auth/session` endpoint, which does not exist in this app (Better Auth
- * serves `/api/auth/get-session`). The guards therefore always saw a signed-out
- * user while Better Auth saw a signed-in one, producing an endless
+ * Better Auth is the single source of truth for the session: this provider and
+ * the proxy both read the same session. Previously this provider used the demo
+ * API client's `/api/auth/session` endpoint, which does not exist in this app
+ * (Better Auth serves `/api/auth/get-session`). Guards therefore always saw a
+ * signed-out user while Better Auth saw a signed-in one, producing an endless
  * sign-in ↔ dashboard redirect loop.
  */
 

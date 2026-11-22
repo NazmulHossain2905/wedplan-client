@@ -59,7 +59,7 @@ import { toast } from "sonner";
 
 export default function AdminOverviewPage() {
   return (
-    <DashboardPage role="admin">
+    <DashboardPage>
       <AdminOverview />
     </DashboardPage>
   );

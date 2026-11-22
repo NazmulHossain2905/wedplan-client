@@ -6,7 +6,7 @@ WedPlan is a role-based wedding planning marketplace. Customers discover wedding
 
 - Public home page, service catalogue with search/filter/sort, and private service details
 - Better Auth email/password and Google sign-in, with short-lived JWTs for the Express API
-- Customer, vendor and admin dashboards with server-side session and role verification
+- Proxy-based route protection: session, blocked-account and role checks run before pages render
 - Vendor service management (pending approval, free-plan limit of 3 active services)
 - Booking requests with accept/reject/cancel and ownership checks
 - Stripe Checkout upgrade flow with a read-only payment status page

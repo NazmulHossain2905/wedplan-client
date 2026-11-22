@@ -20,7 +20,7 @@ const STATUS_TABS: { value: BookingStatus | "all"; label: string }[] = [
 
 export default function CustomerBookingsPage() {
   return (
-    <DashboardPage role="customer">
+    <DashboardPage>
       <CustomerBookings />
     </DashboardPage>
   );

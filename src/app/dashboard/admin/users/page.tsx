@@ -31,7 +31,7 @@ import { toast } from "sonner";
 
 export default function AdminUsersPage() {
   return (
-    <DashboardPage role="admin">
+    <DashboardPage>
       <AdminUsers />
     </DashboardPage>
   );

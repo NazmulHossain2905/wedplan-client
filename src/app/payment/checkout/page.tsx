@@ -1,6 +1,4 @@
 import { CheckoutView } from "@/components/payment/checkout-view";
-import { getActiveUser } from "@/server/guards";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -9,10 +7,7 @@ export const metadata = {
   description: "Complete your WedPlan Premium upgrade.",
 };
 
-export default async function CheckoutPage() {
-  const user = await getActiveUser();
-  if (!user) redirect("/sign-in?redirect=%2Fpayment%2Fcheckout");
-
+export default function CheckoutPage() {
   return (
     <Suspense
       fallback={

@@ -1,21 +1,15 @@
 "use client";
 
 import { DashboardLoading } from "@/components/dashboard/dashboard-shell";
-import { useRoleGuard } from "@/components/providers";
+import { useAuth } from "@/contexts/auth-context";
 
 /**
- * Wraps a dashboard page: shows the loading skeleton while hydrating,
- * redirects unauthenticated users to sign-in, and sends users to their
- * own dashboard when they try to open another role's area by URL.
+ * Keeps dashboard content from flashing before the client session hydrates.
+ * Access control (authentication, blocked accounts and roles) is handled by
+ * the proxy before the page renders, so this is only a loading boundary.
  */
-export function DashboardPage({
-  role,
-  children,
-}: {
-  role: "customer" | "vendor" | "admin" | "any";
-  children: React.ReactNode;
-}) {
-  const { ready } = useRoleGuard(role);
-  if (!ready) return <DashboardLoading />;
+export function DashboardPage({ children }: { children: React.ReactNode }) {
+  const { user, hydrated } = useAuth();
+  if (!hydrated || !user) return <DashboardLoading />;
   return <>{children}</>;
 }

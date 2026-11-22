@@ -27,7 +27,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function CustomerOverviewPage() {
   return (
-    <DashboardPage role="customer">
+    <DashboardPage>
       <CustomerOverview />
     </DashboardPage>
   );

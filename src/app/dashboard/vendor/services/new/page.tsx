@@ -20,7 +20,7 @@ import type { Service } from "@/types";
 
 export default function AddServicePage() {
   return (
-    <DashboardPage role="vendor">
+    <DashboardPage>
       <AddService />
     </DashboardPage>
   );

@@ -7,9 +7,9 @@ import { useSession } from "@/lib/auth-client";
  * Waits for the session before rendering the sign-in / sign-up form so it does
  * not flash for a moment for signed-in visitors.
  *
- * It intentionally does NOT redirect logged-in users away from the form.
- * Server layouts already enforce auth/roles; adding a client redirect here
- * caused a redirect loop with the dashboard guards after sign-in.
+ * It intentionally does NOT redirect logged-in users away from the form — the
+ * proxy does that. A client redirect here caused a loop with the old dashboard
+ * guards after sign-in.
  */
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isPending } = useSession();
