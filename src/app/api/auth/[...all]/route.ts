@@ -1,4 +1,4 @@
-import { auth, ensureAuthConnection } from "@/lib/auth"; // path to your auth file
+import { auth, ensureAuthConnection } from "@/lib/auth";
 import { toNextJsHandler } from "better-auth/next-js";
 
 const handler = toNextJsHandler(auth);

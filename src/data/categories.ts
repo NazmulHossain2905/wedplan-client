@@ -57,4 +57,3 @@ export const CATEGORIES: Category[] = [
   },
 ];
 
-export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);

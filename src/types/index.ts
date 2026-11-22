@@ -26,9 +26,6 @@ export interface User {
   completedWeddings?: number;
 }
 
-/** Shape used only by the seed script (passwords are hashed at rest). */
-export type SeedUser = User & { password: string };
-
 export interface Category {
   id: string;
   name: string;
@@ -76,26 +73,6 @@ export interface Transaction {
   createdAt: string;
 }
 
-export interface DemoSnapshot {
-  users: User[];
-  services: Service[];
-  bookings: Booking[];
-  transactions: Transaction[];
-  currentUserId: string | null;
-}
-
-export interface ActionResult {
-  ok: boolean;
-  error?: string;
-}
-
-export interface BookingInput {
-  serviceId: string;
-  eventDate: string;
-  eventLocation: string;
-  message: string;
-}
-
 export interface ServiceInput {
   serviceName: string;
   category: string;
@@ -104,15 +81,6 @@ export interface ServiceInput {
   location: string;
   images: string[];
   isAvailable: boolean;
-}
-
-export interface ProfileInput {
-  name: string;
-  image: string;
-  businessName?: string;
-  location?: string;
-  phone?: string;
-  bio?: string;
 }
 
 export interface Testimonial {

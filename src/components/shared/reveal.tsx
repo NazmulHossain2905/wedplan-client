@@ -56,14 +56,6 @@ export const staggerContainer = {
   show: { transition: { staggerChildren: 0.07 } },
 };
 
-export const staggerItem: Variants = {
-  hidden: { y: 18 },
-  show: {
-    y: 0,
-    transition: { duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] },
-  },
-};
-
 export function StaggerGrid({
   children,
   className,

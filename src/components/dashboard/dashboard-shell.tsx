@@ -189,10 +189,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Auth, blocked accounts and role checks are handled by the proxy before
-  // this renders. A client-side redirect here races with session hydration and
-  // caused a Sign In <-> dashboard redirect loop, so it was removed.
-
   // Breadcrumbs derived from the path
   const segments = pathname.split("/").filter(Boolean);
   const crumbs = segments.map((seg, i) => ({
@@ -312,5 +308,3 @@ export function DashboardLoading() {
     </div>
   );
 }
-
-export { dashboardHomeForRole };

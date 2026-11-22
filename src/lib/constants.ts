@@ -1,7 +1,4 @@
-export const APP_NAME = "WedPlan";
 export const APP_TAGLINE = "Your dream wedding, beautifully planned.";
-export const APP_DESCRIPTION =
-  "WedPlan is a wedding planning platform where couples discover trusted wedding professionals, explore beautiful venues, and request bookings — all in one place.";
 
 export const CONTACT_INFO = {
   email: "hello@wedplan.com",

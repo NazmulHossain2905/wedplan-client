@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   // Remote hosts used by uploaded service photos, vendor avatars and seeded
   // placeholder imagery. Required by next/image's optimizer.
   images: {

@@ -8,7 +8,7 @@ export function initials(name: string): string {
     .toUpperCase();
 }
 
-/** Read a File as a data URL (for demo image upload previews). */
+/** Read a File as a data URL for image upload previews. */
 export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

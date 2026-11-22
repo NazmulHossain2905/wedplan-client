@@ -74,8 +74,6 @@ export function SignInForm() {
       toast.error(result.error ?? "Google sign-in failed.");
       return;
     }
-    // Google uses a redirect flow: there is no user object to read here.
-    // The /dashboard layout waits for the session, then routes by role.
     router.replace("/dashboard");
   };
 

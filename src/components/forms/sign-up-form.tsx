@@ -182,8 +182,6 @@ export function SignUpForm() {
       }
       return;
     }
-    // Google uses a redirect flow: there is no user object to read here.
-    // The /dashboard layout waits for the session, then routes by role.
     router.replace("/dashboard");
   };
 
