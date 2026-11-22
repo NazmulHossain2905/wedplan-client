@@ -40,26 +40,31 @@ type VerificationState = "verifying" | "succeeded" | "failed" | "no-session";
 export function PaymentSuccessView() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const { user } = useAuth();
+  const { user, hydrated } = useAuth();
 
   const [data, setData] = useState<PaymentResult | null>(null);
-  const [state, setState] = useState<VerificationState>(
-    sessionId && user ? "verifying" : "no-session",
-  );
+  // Only the verification *outcome* is state. "no-session" is derived at
+  // render time: returning from checkout with a session_id is enough to be
+  // "verifying". The Better Auth session is often still hydrating on the
+  // first render (the server guard already confirmed the user), so waiting
+  // for `user` here would flash "No Checkout Session" for a second or two.
+  const [verification, setVerification] = useState<
+    "verifying" | "succeeded" | "failed"
+  >("verifying");
 
-  const shouldVerify = Boolean(user) && Boolean(sessionId);
+  const hasUser = Boolean(user);
+  const shouldVerify = hydrated && hasUser && Boolean(sessionId);
+  const noSession = !sessionId || (hydrated && !hasUser);
+  const state: VerificationState = noSession ? "no-session" : verification;
   const isVerifying = state === "verifying";
   const succeeded = state === "succeeded";
 
   // Keep asking the server until the webhook has finished processing. A 404
   // (webhook not recorded yet) or a network/5xx error is still "verifying" —
   // only a definitive rejection or exhausted retries count as a failure.
+  // While auth hydrates, shouldVerify is false and the loader stays up — no
+  // premature "no-session" state is ever written.
   useEffect(() => {
-    if (!sessionId) {
-      setState("no-session");
-      return;
-    }
-    // The session may still be hydrating — stay in "verifying" until it is.
     if (!shouldVerify) return;
 
     let cancelled = false;
@@ -74,7 +79,7 @@ export function PaymentSuccessView() {
 
         const transaction = result.transaction;
         if (!transaction) {
-          setState("failed");
+          setVerification("failed");
           return;
         }
 
@@ -89,7 +94,7 @@ export function PaymentSuccessView() {
         setData(mapped);
 
         if (mapped.activated || mapped.status === "succeeded") {
-          setState("succeeded");
+          setVerification("succeeded");
           return;
         }
         if (
@@ -97,7 +102,7 @@ export function PaymentSuccessView() {
           mapped.status === "canceled" ||
           mapped.status === "rejected"
         ) {
-          setState("failed");
+          setVerification("failed");
           return;
         }
       } catch (error) {
@@ -108,14 +113,14 @@ export function PaymentSuccessView() {
           error instanceof ApiError &&
           (error.status === 400 || error.status === 403)
         ) {
-          setState("failed");
+          setVerification("failed");
           return;
         }
       }
 
       if (cancelled) return;
       if (attempts >= MAX_ATTEMPTS) {
-        setState("failed");
+        setVerification("failed");
         return;
       }
       attempts += 1;
